@@ -16,7 +16,8 @@
 #include <stdexcept>
 #include <segvcatch.h>
 //#include <iostream>
-#define threading 
+#define threading
+#define ZOOMFACTOR 1
 
 #define PORT 3490
 #define BACKLOG 10
@@ -70,12 +71,22 @@ void DrawScreen()
 {
 //Clear Screen
 printf("test");
+    int curcount=0;
     while (1){
+    curcount=count;
     clear_to_color( bitbuffer, makecol( 0, 0, 0));
     
     //Draw something
     try {
-     textprintf_centre_ex(bitbuffer, font, SCREEN_W/2, SCREEN_H/2, makecol(255,255,255), -1,"%d",samples[count-1]);
+     textprintf_centre_ex(bitbuffer, font, SCREENSIZE_x-90, 15, makecol(255,255,255), -1,"Last sample: %.3f V",((float) samples[curcount-1])*(1.8/4096.));
+     
+     for (int a=0;a<=SCREEN_W;a++) {
+        fastline(bitbuffer,SCREEN_W-a,(samples[curcount-(a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,(samples[curcount-((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
+     }
+     
+     
+     
+     
     }
     catch(std::exception& e) {
     printf("segfault catched\n");
