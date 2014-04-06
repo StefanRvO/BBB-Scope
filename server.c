@@ -8,10 +8,65 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include<allegro.h>
+#include<time.h>
+#include <math.h>
+#include <thread>
+#include "server.h"
+#define threading 
 
 #define PORT 3490
 #define BACKLOG 10
 #define BUFSIZE 2
+
+const int SCREENSIZE_x=1300;
+const int SCREENSIZE_y=700;
+volatile int ticks = 0;
+BITMAP *bitbuffer;
+int buffer[BUFSIZE];
+int count = 0;
+int* samples = NULL;
+int* more_samples = NULL;
+
+void ticker()
+{
+    ticks++;
+}
+END_OF_FUNCTION(ticker)
+int updates_per_second = 100000;
+
+void Init()
+{
+    allegro_init();
+    install_keyboard();
+    install_timer();
+    LOCK_VARIABLE(ticks);
+    LOCK_FUNCTION(ticker);
+    install_int_ex(ticker, BPS_TO_TIMER(updates_per_second));
+    set_gfx_mode( GFX_AUTODETECT_WINDOWED, SCREENSIZE_x, SCREENSIZE_y, 0, 0);
+    request_refresh_rate(1000);
+}
+
+
+void DrawScreen()
+{
+//Clear Screen
+printf("test");
+    while (1){
+    clear_to_color( bitbuffer, makecol( 0, 0, 0));
+    
+    //Draw something
+     textprintf_centre_ex(bitbuffer, font, SCREEN_W/2, SCREEN_H/2, makecol(255,255,255), -1,"%d",samples[count-1]);
+    
+    acquire_screen();
+    blit(bitbuffer, screen, 0, 0, 0, 0, SCREENSIZE_x, SCREENSIZE_y);
+    release_screen();
+    //cout << "Drawing" << /*game.generation <<*/ endl;
+    }
+}
+
+
+
 int main()
 {
     struct sockaddr_in server;
@@ -23,8 +78,7 @@ int main()
     //  memset(buffer,0,sizeof(buffer));
     int yes =1;
     int i=0;
-
-
+    
 
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0))== -1) {
         fprintf(stderr, "Socket failure!!\n");
@@ -59,24 +113,42 @@ int main()
             exit(1);
         }
         printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
+        Init();
+        bitbuffer=create_bitmap(SCREENSIZE_x, SCREENSIZE_y);
+        std::thread t1(DrawScreen);
         //buffer = "Hello World!! I am networking!!\n";
 
         while(1) {
-        if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) {
-            //fprintf(stderr,"Error in receiving message!!\n");
-            perror("recv");
-            exit(1);
-        }   
-        else if (num == 0) {
-            printf("Connection closed\n");
-            return 0;
-        }
-    //  num = recv(client_fd, buffer, sizeof(buffer),0);
-        //buffer[num] = '\1';
-        //printf("Message received: %d\n", *buffer);
-        if(i++%10000==0){
-        printf("%d\n",*buffer);
-        }
+            if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) {
+                //fprintf(stderr,"Error in receiving message!!\n");
+                perror("recv");
+                exit(1);
+            }   
+            else if (num == 0) {
+                printf("Connection closed\n");
+                return 0;
+            }
+        //  num = recv(client_fd, buffer, sizeof(buffer),0);
+            //buffer[num] = '\1';
+            //printf("Message received: %d\n", *buffer);
+            //if(i++%10000==0){
+            //printf("%d\n",*buffer);
+            //}
+            count++;
+            more_samples = (int*) realloc (samples, count * sizeof(int));
+            if (more_samples!=NULL) {
+            samples=more_samples;
+            samples[count-1]=*buffer;
+            
+            }
+            else {
+            free (samples);
+            puts ("Error (re)allocating memory");
+            exit (1);
+            }
+            if(count%10000==0) {
+            printf("%d\n",count);
+            }
         }
 
     /*  buff = "I am communicating with the client!!\n";
