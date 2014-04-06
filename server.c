@@ -77,6 +77,9 @@ printf("test");
     int curcount=0;
     int keyval=0;
     float ZOOMFACTOR=1;
+    int Y_off=0;  //Y offset
+    float Y_Zoom=1;
+    float Y_adjust=0;
     while (1){
         if (key[KEY_ESC]) {
             exit(0);
@@ -88,9 +91,11 @@ printf("test");
         try {
              textprintf_centre_ex(bitbuffer, font, SCREENSIZE_x-90, 15, makecol(255,255,255), -1,"Last sample: %.3f V",((float) samples[curcount-1])*(1.8/4096.));
              textprintf_ex(bitbuffer, font, 0, 15, makecol(255,255,255), -1,"ZOOM: %f",ZOOMFACTOR);
+             textprintf_ex(bitbuffer, font, 0, 30, makecol(255,255,255), -1,"ZOOMY: %f",Y_Zoom);
+             textprintf_ex(bitbuffer, font, 0, 45, makecol(255,255,255), -1,"Y_off: %d",Y_off);
              textprintf_ex(bitbuffer, font, 0, SCREEN_H-30, makecol(255,255,255), -1,"sample frequency: %.1f Hz",(float) (1./(float)(sampletime/40000.))*1000000);
              for (int a=0;a<=SCREEN_W;a++) {
-                fastline(bitbuffer,SCREEN_W-a,SCREEN_H-(samples[curcount-(int) (a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,SCREEN_H-(samples[curcount-(int)((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
+                fastline(bitbuffer,SCREEN_W-a,(SCREEN_H-(samples[curcount-(int) (a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096-(Y_off-Y_adjust))*Y_Zoom,SCREENSIZE_x-a-1,(SCREEN_H-(samples[curcount-(int)((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096-(Y_off-Y_adjust))*Y_Zoom,makecol( 0, 255, 0));
          }
          
          
@@ -141,6 +146,20 @@ printf("test");
             }
             else if( (keyval>>8)==KEY_SPACE) {
                 ZOOMFACTOR=1;
+                }
+            else if( (keyval>>8)==KEY_UP) {
+                Y_off++;
+                }
+            else if( (keyval>>8)==KEY_DOWN) {
+                Y_off--;
+                }
+            else if( (keyval>>8)==KEY_STOP) {
+                Y_Zoom*=1.01;
+                Y_adjust=-(SCREEN_H)*(1./Y_Zoom-1)/2.;
+                }
+            else if( (keyval>>8)==KEY_COMMA) {
+                Y_Zoom*=(1/1.01);
+                Y_adjust=-(SCREEN_H)*(1./Y_Zoom-1)/2.;
                 }
         }
     }
