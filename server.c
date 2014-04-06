@@ -17,11 +17,12 @@
 #include <segvcatch.h>
 //#include <iostream>
 #define threading
-#define ZOOMFACTOR 1
 
 #define PORT 3490
 #define BACKLOG 10
 #define BUFSIZE 2
+#define ZOOMMIN 0.01
+#define ZOOMMAX 10000
 
 const int SCREENSIZE_x=1300;
 const int SCREENSIZE_y=700;
@@ -31,7 +32,6 @@ int buffer[BUFSIZE];
 int count = 0;
 int* samples = NULL;
 int* more_samples = NULL;
-
 void ticker()
 {
     ticks++;
@@ -72,29 +72,67 @@ void DrawScreen()
 //Clear Screen
 printf("test");
     int curcount=0;
+    int keyval=0;
+    float ZOOMFACTOR=1;
     while (1){
-    curcount=count;
-    clear_to_color( bitbuffer, makecol( 0, 0, 0));
-    
-    //Draw something
-    try {
-     textprintf_centre_ex(bitbuffer, font, SCREENSIZE_x-90, 15, makecol(255,255,255), -1,"Last sample: %.3f V",((float) samples[curcount-1])*(1.8/4096.));
-     
-     for (int a=0;a<=SCREEN_W;a++) {
-        fastline(bitbuffer,SCREEN_W-a,(samples[curcount-(a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,(samples[curcount-((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
-     }
-     
-     
-     
-     
-    }
-    catch(std::exception& e) {
-    printf("segfault catched\n");
-    continue;
-    }
-    acquire_screen();
-    blit(bitbuffer, screen, 0, 0, 0, 0, SCREENSIZE_x, SCREENSIZE_y);
-    release_screen();
+        curcount=count;
+        clear_to_color( bitbuffer, makecol( 0, 0, 0));
+        
+        //Draw something
+        try {
+             textprintf_centre_ex(bitbuffer, font, SCREENSIZE_x-90, 15, makecol(255,255,255), -1,"Last sample: %.3f V",((float) samples[curcount-1])*(1.8/4096.));
+             textprintf_ex(bitbuffer, font, 0, 15, makecol(255,255,255), -1,"ZOOM: %f",ZOOMFACTOR);
+             for (int a=0;a<=SCREEN_W;a++) {
+                fastline(bitbuffer,SCREEN_W-a,(samples[curcount-(int) (a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,(samples[curcount-(int)((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
+         }
+         
+         
+         
+         
+        }
+        catch(std::exception& e) {
+            printf("segfault catched\n");
+            continue;
+        }
+        vsync();
+        blit(bitbuffer, screen, 0, 0, 0, 0, SCREENSIZE_x, SCREENSIZE_y);
+        while(keypressed()) {
+            keyval=readkey();
+            //Fast Zoom
+            if((keyval & 0xff) =='+') {
+                if (ZOOMFACTOR*SCREEN_W<(curcount*(1/1.001))) {
+                    ZOOMFACTOR*=1.1;
+                    if(ZOOMFACTOR>ZOOMMAX) {
+                        ZOOMFACTOR=ZOOMMAX;
+                    }
+                }
+            }
+            else if((keyval & 0xff) =='-') {
+                if (ZOOMFACTOR>ZOOMMIN) {
+                    ZOOMFACTOR*=(1/1.1);
+                    if (ZOOMFACTOR<ZOOMMIN) {
+                       ZOOMFACTOR=ZOOMMIN;
+                    }
+                }
+            }
+            //Slow Zoom
+            if((keyval & 0xff) =='p') {
+                if (ZOOMFACTOR*SCREEN_W<(curcount*(1/1.01))) {
+                    ZOOMFACTOR*=1.001;
+                    if(ZOOMFACTOR>ZOOMMAX) {
+                        ZOOMFACTOR=ZOOMMAX;
+                    }
+                }
+            }
+            else if((keyval & 0xff) =='m') {
+                if (ZOOMFACTOR>ZOOMMIN) {
+                    ZOOMFACTOR*=(1/1.001);
+                    if (ZOOMFACTOR<ZOOMMIN) {
+                       ZOOMFACTOR=ZOOMMIN;
+                    }
+                }
+            }
+        }
     }
 }
 
