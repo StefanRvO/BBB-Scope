@@ -13,6 +13,9 @@
 #include <math.h>
 #include <thread>
 #include "server.h"
+#include <stdexcept>
+#include <segvcatch.h>
+//#include <iostream>
 #define threading 
 
 #define PORT 3490
@@ -35,6 +38,21 @@ void ticker()
 END_OF_FUNCTION(ticker)
 int updates_per_second = 100000;
 
+
+
+void handle_segv()
+{
+    //throw std::runtime_error("My SEGV");
+    printf("SEGV catched");
+}
+
+void handle_fpe()
+{
+    //throw std::runtime_error("My FPE");
+        printf("fpe catched");
+}
+
+
 void Init()
 {
     allegro_init();
@@ -56,12 +74,16 @@ printf("test");
     clear_to_color( bitbuffer, makecol( 0, 0, 0));
     
     //Draw something
+    try {
      textprintf_centre_ex(bitbuffer, font, SCREEN_W/2, SCREEN_H/2, makecol(255,255,255), -1,"%d",samples[count-1]);
-    
+    }
+    catch(std::exception& e) {
+    printf("segfault catched\n");
+    continue;
+    }
     acquire_screen();
     blit(bitbuffer, screen, 0, 0, 0, 0, SCREENSIZE_x, SCREENSIZE_y);
     release_screen();
-    //cout << "Drawing" << /*game.generation <<*/ endl;
     }
 }
 
@@ -115,6 +137,8 @@ int main()
         printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
         Init();
         bitbuffer=create_bitmap(SCREENSIZE_x, SCREENSIZE_y);
+        segvcatch::init_segv();
+        segvcatch::init_fpe();
         std::thread t1(DrawScreen);
         //buffer = "Hello World!! I am networking!!\n";
 
