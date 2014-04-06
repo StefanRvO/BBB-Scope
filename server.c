@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include<allegro.h>
-#include<time.h>
+#include <sys/time.h>
 #include <math.h>
 #include <thread>
 #include "server.h"
@@ -32,13 +32,16 @@ int buffer[BUFSIZE];
 int count = 0;
 int* samples = NULL;
 int* more_samples = NULL;
+long sampletime=0;
+long sampletime_tmp=0;
 void ticker()
 {
     ticks++;
 }
 END_OF_FUNCTION(ticker)
 int updates_per_second = 100000;
-
+timeval time_1;
+timeval time_2;
 
 
 void handle_segv()
@@ -75,6 +78,9 @@ printf("test");
     int keyval=0;
     float ZOOMFACTOR=1;
     while (1){
+        if (key[KEY_ESC]) {
+            exit(0);
+            }
         curcount=count;
         clear_to_color( bitbuffer, makecol( 0, 0, 0));
         
@@ -82,8 +88,9 @@ printf("test");
         try {
              textprintf_centre_ex(bitbuffer, font, SCREENSIZE_x-90, 15, makecol(255,255,255), -1,"Last sample: %.3f V",((float) samples[curcount-1])*(1.8/4096.));
              textprintf_ex(bitbuffer, font, 0, 15, makecol(255,255,255), -1,"ZOOM: %f",ZOOMFACTOR);
+             textprintf_ex(bitbuffer, font, 0, SCREEN_H-30, makecol(255,255,255), -1,"sample frequency: %.1f Hz",(float) (1./(float)(sampletime/40000.))*1000000);
              for (int a=0;a<=SCREEN_W;a++) {
-                fastline(bitbuffer,SCREEN_W-a,(samples[curcount-(int) (a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,(samples[curcount-(int)((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
+                fastline(bitbuffer,SCREEN_W-a,SCREEN_H-(samples[curcount-(int) (a*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,SCREENSIZE_x-a-1,SCREEN_H-(samples[curcount-(int)((a-1)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096,makecol( 0, 255, 0));
          }
          
          
@@ -116,7 +123,7 @@ printf("test");
                 }
             }
             //Slow Zoom
-            if((keyval & 0xff) =='p') {
+            else if((keyval & 0xff) =='p') {
                 if (ZOOMFACTOR*SCREEN_W<(curcount*(1/1.01))) {
                     ZOOMFACTOR*=1.001;
                     if(ZOOMFACTOR>ZOOMMAX) {
@@ -132,6 +139,9 @@ printf("test");
                     }
                 }
             }
+            else if( (keyval>>8)==KEY_SPACE) {
+                ZOOMFACTOR=1;
+                }
         }
     }
 }
@@ -219,9 +229,18 @@ int main()
             puts ("Error (re)allocating memory");
             exit (1);
             }
-            if(count%10000==0) {
-            printf("%d\n",count);
+            if(count%40000==0) {
+                gettimeofday(&time_2,0);
+                sampletime_tmp=time_2.tv_usec-time_1.tv_usec;
+                if (sampletime_tmp<0) {
+                    sampletime_tmp+=1000000;
+                }
+                sampletime=sampletime_tmp;
+                gettimeofday(&time_1,0);
             }
+           // if(count%10000==0) {
+           // printf("%d\n",count);
+           // }
         }
 
     /*  buff = "I am communicating with the client!!\n";
