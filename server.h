@@ -6,3 +6,5 @@ extern int count;
 extern float ZOOMFACTOR;
 extern int curcount;
 extern long sampletime;
+extern long long *times;
+extern int timecount;
