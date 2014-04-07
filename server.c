@@ -144,16 +144,11 @@ printf("test");
              //Draw axis units
 
              if (framecount%10==0 && !Paused) {
-                gettimeofday(&time_3,0);
-                timewidth=(time_3.tv_sec*1000000 + time_3.tv_usec)-times[curtimecount-1-(samplewidth/TIMERES)];
+                timewidth=(times[curtimecount-1]-times[0])*SCREEN_W*ZOOMFACTOR/curcount;
              }
              if (Paused) {
                 textprintf_ex(bitbuffer, font, 0, 60, makecol(255,255,255), -1,"Time behind: %lld µs",times[timecount-1]-times[curtimecount-1]);
-                timewidth=(times[curtimecount-1]-times[curtimecount-1-(samplewidth/TIMERES)]);
-                timewidth+= (long long) ((timewidth/(double)((samplewidth/TIMERES)*TIMERES))*(samplewidth%TIMERES)); //Correct for rounding errors
-                if (samplewidth<TIMERES) {
-                    timewidth=(times[curtimecount-1]-times[curtimecount-2])*samplewidth/TIMERES;
-                    }
+                timewidth=(times[curtimecount-1]-times[0])*SCREEN_W*ZOOMFACTOR/curcount;
                 }
              for (int i=1;i<=16;i+=2) {
              textprintf_centre_ex(bitbuffer,font,SCREEN_W*i/16.,SCREEN_H/2+15,makecol(0,0,255),-1,"-%.0f µs",timewidth-(timewidth*i)/16.);
@@ -166,7 +161,8 @@ printf("test");
             //Draw mouse circle
             circlefill(bitbuffer,x_pos,SCREEN_H-(samples[curcount-(int) ((SCREEN_W-x_pos)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096-(Y_off-Y_adjust)*Y_Zoom,5,makecol(255,0,0));
             //Draw selected data
-            textprintf_ex(bitbuffer, font, 0, 75, makecol(255,255,255), -1,"%f",(float)(samples[curcount-(int) ((SCREEN_W-x_pos)*ZOOMFACTOR)-1])*(1.8/4096.));
+            textprintf_ex(bitbuffer, font, 0, 75, makecol(255,255,255), -1,"Selected Voltage: %.3f V",(float)(samples[curcount-(int) ((SCREEN_W-x_pos)*ZOOMFACTOR)-1])*(1.8/4096.));
+            textprintf_ex(bitbuffer, font, 0, 90, makecol(255,255,255), -1,"Selected time (realative): - %.1f µs",timewidth*(float)(SCREEN_W-x_pos)/SCREEN_W);
          }
          
          
