@@ -135,7 +135,6 @@ printf("test");
              textprintf_ex(bitbuffer, font, 0, 15, makecol(255,255,255), -1,"ZOOM: %f",ZOOMFACTOR);
              textprintf_ex(bitbuffer, font, 0, 30, makecol(255,255,255), -1,"ZOOMY: %f",Y_Zoom);
              textprintf_ex(bitbuffer, font, 0, 45, makecol(255,255,255), -1,"Y_off: %d",Y_off);
-             textprintf_ex(bitbuffer, font, 0, 75, makecol(255,255,255), -1,"%d",x_pos);
              printf("%lld\n",times[timecount-1]);
              textprintf_ex(bitbuffer, font, 0, SCREEN_H-30, makecol(255,255,255), -1,"sample frequency: %.1f Hz",(float) (1./(float)(sampletime/40000.))*1000000);
              //Print axises
@@ -166,6 +165,8 @@ printf("test");
             if (Paused) {
             //Draw mouse circle
             circlefill(bitbuffer,x_pos,SCREEN_H-(samples[curcount-(int) ((SCREEN_W-x_pos)*ZOOMFACTOR)-1])*SCREENSIZE_y/4096-(Y_off-Y_adjust)*Y_Zoom,5,makecol(255,0,0));
+            //Draw selected data
+            textprintf_ex(bitbuffer, font, 0, 75, makecol(255,255,255), -1,"%f",(float)(samples[curcount-(int) ((SCREEN_W-x_pos)*ZOOMFACTOR)-1])*(1.8/4096.));
          }
          
          
