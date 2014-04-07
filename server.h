@@ -8,3 +8,4 @@ extern int curcount;
 extern long sampletime;
 extern long long *times;
 extern int timecount;
+extern bool recvstopped;

@@ -1,6 +1,6 @@
 /*
-!!!!!!!!!!!Y_off and Y_Zoom is experimaéntal and not working correctly. Axis units won't be correct if it's used!!!!!!!
-Times when not paused us not very precise
+!!!!!!!!!!!Y_off and Y_Zoom is experimental and not working correctly. Axis units won't be correct if it's used!!!!!!!
+Times is not garanteed to be precise. A stable sample rate is assumed, and pausing the sampling (PAUSE/BREAK key) introduces timing errors
 */
 
 
@@ -44,6 +44,7 @@ long long*times_tmp=NULL;
 int timecount=0;
 long sampletime=0;
 long sampletime_tmp=0;
+bool recvstopped=0;
 void ticker()
 {
     ticks++;
@@ -53,7 +54,6 @@ int updates_per_second = 100000;
 timeval time_1;
 timeval time_2;
 timeval time_3;
-
 
 void handle_segv()
 {
@@ -113,6 +113,8 @@ printf("test");
     int framecount=0;
     int curtimecount;
     int pos,x_pos,y_pos;
+    long long time_paused_cor=0; //Correction when pausing the recieving
+    long long paused_start_time=0;
     while (1){
             pos=mouse_pos;
             x_pos=pos>>16;
@@ -135,7 +137,6 @@ printf("test");
              textprintf_ex(bitbuffer, font, 0, 15, makecol(255,255,255), -1,"ZOOM: %f",ZOOMFACTOR);
              textprintf_ex(bitbuffer, font, 0, 30, makecol(255,255,255), -1,"ZOOMY: %f",Y_Zoom);
              textprintf_ex(bitbuffer, font, 0, 45, makecol(255,255,255), -1,"Y_off: %d",Y_off);
-             printf("%lld\n",times[timecount-1]);
              textprintf_ex(bitbuffer, font, 0, SCREEN_H-30, makecol(255,255,255), -1,"sample frequency: %.1f Hz",(float) (1./(float)(sampletime/40000.))*1000000);
              //Print axises
              rectfill(bitbuffer,SCREEN_W/2+1,0,SCREEN_W/2-1,SCREEN_H,makecol(0,0,255));
@@ -144,11 +145,11 @@ printf("test");
              //Draw axis units
 
              if (framecount%10==0 && !Paused) {
-                timewidth=(times[curtimecount-1]-times[0])*SCREEN_W*ZOOMFACTOR/curcount;
+                timewidth=(times[curtimecount-1]-times[0]-time_paused_cor)*SCREEN_W*ZOOMFACTOR/curcount;
              }
              if (Paused) {
                 textprintf_ex(bitbuffer, font, 0, 60, makecol(255,255,255), -1,"Time behind: %lld µs",times[timecount-1]-times[curtimecount-1]);
-                timewidth=(times[curtimecount-1]-times[0])*SCREEN_W*ZOOMFACTOR/curcount;
+                timewidth=(times[curtimecount-1]-times[0]-time_paused_cor)*SCREEN_W*ZOOMFACTOR/curcount;
                 }
              for (int i=1;i<=16;i+=2) {
              textprintf_centre_ex(bitbuffer,font,SCREEN_W*i/16.,SCREEN_H/2+15,makecol(0,0,255),-1,"-%.0f µs",timewidth-(timewidth*i)/16.);
@@ -178,7 +179,7 @@ printf("test");
         while(keypressed()) {
             keyval=readkey();
             //Fast Zoom
-            if((keyval & 0xff) =='+') {
+            if((keyval & 0xff) =='-') {
                 if (ZOOMFACTOR*1.1*SCREEN_W<curcount) {
                     Prev_Zoom=ZOOMFACTOR;
                     ZOOMFACTOR*=1.1;
@@ -190,7 +191,7 @@ printf("test");
                     }
                 }
             }
-            else if((keyval & 0xff) =='-') {
+            else if((keyval & 0xff) =='+') {
                 if (ZOOMFACTOR>ZOOMMIN) {
                     Prev_Zoom=ZOOMFACTOR;
                     ZOOMFACTOR*=(1/1.1);
@@ -203,7 +204,7 @@ printf("test");
                 }
             }
             //Slow Zoom
-            else if((keyval & 0xff) =='p') {
+            else if((keyval & 0xff) =='m') {
                 if (ZOOMFACTOR*1.001*SCREEN_W<curcount) {
                     ZOOMFACTOR*=1.001;
                     if(ZOOMFACTOR>ZOOMMAX) {
@@ -211,7 +212,7 @@ printf("test");
                     }
                 }
             }
-            else if((keyval & 0xff) =='m') {
+            else if((keyval & 0xff) =='p') {
                 if (ZOOMFACTOR>ZOOMMIN) {
                     ZOOMFACTOR*=(1/1.001);
                     if (ZOOMFACTOR<ZOOMMIN) {
@@ -253,6 +254,17 @@ printf("test");
             else if( (keyval >>8)==KEY_S)  {
                 SaveToDisk(curcount);
                 }
+            else if ( (keyval >>8) ==KEY_PAUSE) {
+                if(!recvstopped) {
+                    gettimeofday(&time_3,0);
+                    paused_start_time=time_3.tv_sec*1000000 + time_3.tv_usec;
+                    }
+                else {
+                    gettimeofday(&time_3,0);
+                    time_paused_cor+=(time_3.tv_sec*1000000 + time_3.tv_usec)-paused_start_time;
+                    }
+                recvstopped=!recvstopped;
+            }
         }
     }
 }
@@ -313,60 +325,66 @@ int main()
         //buffer = "Hello World!! I am networking!!\n";
 
         while(1) {
-            if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) {
-                //fprintf(stderr,"Error in receiving message!!\n");
-                perror("recv");
-                exit(1);
-            }   
-            else if (num == 0) {
-                printf("Connection closed\n");
-                return 0;
-            }
-        //  num = recv(client_fd, buffer, sizeof(buffer),0);
-            //buffer[num] = '\1';
-            //printf("Message received: %d\n", *buffer);
-            //if(i++%10000==0){
-            //printf("%d\n",*buffer);
-            //}
-            count++;
-            more_samples = (int*) realloc (samples, count * sizeof(int));
-            if (more_samples!=NULL) {
-            samples=more_samples;
-            samples[count-1]=*buffer;
-            
-            }
-            else {
-            free (samples);
-            puts ("Error (re)allocating memory");
-            exit (1);
-            }
-            if(count%TIMERES==0) {
-                timecount++;
-                times_tmp = (long long*) realloc (times, timecount * sizeof(long long));
-                if (times_tmp!=NULL) {
-                    times=times_tmp;
-                    gettimeofday(&time_3,0);
-                    times[timecount-1]=time_3.tv_sec*1000000 + time_3.tv_usec;
-                    
-                    }
+            if (!recvstopped) {
+                if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) {
+                    //fprintf(stderr,"Error in receiving message!!\n");
+                    perror("recv");
+                    exit(1);
+                }   
+                else if (num == 0) {
+                    printf("Connection closed\n");
+                    return 0;
+                }
+            //  num = recv(client_fd, buffer, sizeof(buffer),0);
+                //buffer[num] = '\1';
+                //printf("Message received: %d\n", *buffer);
+                //if(i++%10000==0){
+                //printf("%d\n",*buffer);
+                //}
+                count++;
+                more_samples = (int*) realloc (samples, count * sizeof(int));
+                if (more_samples!=NULL) {
+                samples=more_samples;
+                samples[count-1]=*buffer;
+                
+                }
                 else {
-                free (times);
+                free (samples);
                 puts ("Error (re)allocating memory");
                 exit (1);
                 }
-            }
-                
-            
-            
-            if(count%40000==0) {
-                gettimeofday(&time_2,0);
-                sampletime_tmp=time_2.tv_usec-time_1.tv_usec;
-                if (sampletime_tmp<0) {
-                    sampletime_tmp+=1000000;
+                if(count%TIMERES==0) {
+                    timecount++;
+                    times_tmp = (long long*) realloc (times, timecount * sizeof(long long));
+                    if (times_tmp!=NULL) {
+                        times=times_tmp;
+                        gettimeofday(&time_3,0);
+                        times[timecount-1]=time_3.tv_sec*1000000 + time_3.tv_usec;
+                        
+                        }
+                    else {
+                    free (times);
+                    puts ("Error (re)allocating memory");
+                    exit (1);
+                    }
                 }
-                sampletime=sampletime_tmp;
-                gettimeofday(&time_1,0);
+                    
+                
+                
+                if(count%40000==0) {
+                    gettimeofday(&time_2,0);
+                    sampletime_tmp=time_2.tv_usec-time_1.tv_usec;
+                    if (sampletime_tmp<0) {
+                        sampletime_tmp+=1000000;
+                    }
+                    sampletime=sampletime_tmp;
+                    gettimeofday(&time_1,0);
+                }
             }
+            else {
+                sleep(0.1);
+                }
+
            // if(count%10000==0) {
            // printf("%d\n",count);
            // }
