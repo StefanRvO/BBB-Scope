@@ -20,7 +20,7 @@ class SampleGrabber
         int buffer[BUFSIZE];
         struct sockaddr_in server;
         struct sockaddr_in dest;
-        int status,socket_fd, client_fd,num;
+        int socket_fd, client_fd,num;
         socklen_t size;
         std::thread t1;
         timeval tv;
