@@ -26,8 +26,8 @@ class SampleGrabber
         timeval tv;
     
     public:
-        RingBuffer<int,1000000> *sBuffer;
-        RingBuffer<timeval,1000000> *tBuffer;
+        RingBuffer<unsigned short,1000000> *sBuffer;
+        RingBuffer<unsigned long long,1000000> *tBuffer;
         SampleGrabber(int port);
         ~SampleGrabber();
         void run();           

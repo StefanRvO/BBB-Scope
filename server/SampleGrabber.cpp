@@ -2,8 +2,8 @@
 
 SampleGrabber::SampleGrabber(int port)
 {
-    sBuffer=new RingBuffer<int,1000000>;
-    tBuffer=new RingBuffer<timeval,1000000>;
+    sBuffer=new RingBuffer<unsigned short,1000000>;
+    tBuffer=new RingBuffer<unsigned long long,1000000>;
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0))== -1) 
     {
         fprintf(stderr, "Socket failure!!\n");
@@ -57,8 +57,8 @@ void SampleGrabber::run()
                 printf("Connection closed\n");
                 break;
             }
+            tBuffer->push_back(tv.tv_sec*1000000+tv.tv_usec);
             sBuffer->push_back(*buffer);
-            tBuffer->push_back(tv);
         }
         
     }
