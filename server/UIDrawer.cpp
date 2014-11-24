@@ -29,7 +29,7 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_)
 	    SDL_Quit();
 	    exit(0);
     }
-    eventHandler=new EventHandler(window,renderer,&options);
+    eventHandler=new EventHandler(window,renderer,&options,samples,times);
     
 }
 UIDrawer::~UIDrawer()
@@ -74,6 +74,7 @@ void UIDrawer::Draw()
     int samplesize=samples.size();
     if(samplesize-1 < w) i=samplesize-1;
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
+    cout << options.zoomY << " " << options.zoomX << endl;
     for(; i > 1; i--)
     {
         SDL_RenderDrawLine(renderer,w-i,samples[samples.size()-i]*h/4096,w-i+1,samples[samples.size()-i+1]*h/4096);
