@@ -24,7 +24,7 @@ void EventHandler::stateHandler()
     }
     else if(keyState[SDL_SCANCODE_KP_PLUS] and keyState[SDL_SCANCODE_LCTRL])
     {
-        double newZoomY=options->zoomY+options->zoomY*0.02;
+        double newZoomY=options->zoomY-options->zoomY*0.02;
         double zoom_ratio=newZoomY/options->zoomY;
         options->offsetY-=(h/(options->zoomY*zoom_ratio))*(1-zoom_ratio)/2;
         options->zoomY=newZoomY;
@@ -38,12 +38,31 @@ void EventHandler::stateHandler()
     }
     else if(keyState[SDL_SCANCODE_KP_MINUS] and keyState[SDL_SCANCODE_LCTRL])
     {
-        double newZoomY=options->zoomY-options->zoomY*0.02;
+        double newZoomY=options->zoomY+options->zoomY*0.02;
         double zoom_ratio=newZoomY/options->zoomY;
         options->offsetY-=(h/(options->zoomY*zoom_ratio))*(1-zoom_ratio)/2;
         options->zoomY=newZoomY;
     }
-    
+    if(keyState[SDL_SCANCODE_LEFT])
+    {
+        options->offsetX+=5/(options->zoomX);
+    }
+    if(keyState[SDL_SCANCODE_RIGHT])
+    {
+        options->offsetX-=5/(options->zoomX);
+    }
+    if(keyState[SDL_SCANCODE_UP])
+    {
+        options->offsetY+=5/(options->zoomY);
+    }
+    if(keyState[SDL_SCANCODE_DOWN])
+    {
+        options->offsetY-=5/(options->zoomY);
+    }
+    if(options->offsetX<0)
+    {
+        options->offsetX=0;
+    }
     //Mouse
     int xpos,ypos;
     Uint32 mouseState=SDL_GetMouseState(&xpos,&ypos);

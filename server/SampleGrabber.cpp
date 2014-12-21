@@ -46,7 +46,6 @@ void SampleGrabber::run()
          printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
         while(true) 
         {
-            gettimeofday(&tv,NULL);
             if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) 
             {
                 perror("recv");
@@ -57,10 +56,10 @@ void SampleGrabber::run()
                 printf("Connection closed\n");
                 break;
             }
+            gettimeofday(&tv,NULL);
             tBuffer->push_back(tv.tv_sec*1000000+tv.tv_usec);
-            sBuffer->push_back(*buffer);
+            sBuffer->push_back(*buffer+2048);
         }
-        
     }
 }
 SampleGrabber::~SampleGrabber()

@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
     double v=0;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        buffer[0]=(int)(sin(v)*2048)+2048;
-        v+=0.03;
-        usleep(10000);
+        buffer[0]=(int)(sin(v)*2048);
+        v+=0.003;
+//        usleep(10000);
         if ((send(socket_fd,buffer, (sizeof(buffer)/sizeof(*buffer)),0))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_fd);

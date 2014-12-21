@@ -55,7 +55,6 @@ void UIDrawer::GetNewData()
     while(Grabber->sBuffer->size()>1)
     {
         samples.push_back(Grabber->sBuffer->pop_front());
-        cout << samples[(int)samples.size()-1] << endl;
     }
     while(times.size()<samples.size() and Grabber->tBuffer->size()>1 )
     {
@@ -70,14 +69,18 @@ void UIDrawer::Draw()
     //Draw samples
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
+    w/=options.zoomX;
+    h/=options.zoomY;
     int i=w;
-    int samplesize=samples.size();
+    long samplesize=samples.size();
     if(samplesize-1 < w) i=samplesize-1;
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
-    cout << options.zoomY << " " << options.zoomX << endl;
-    for(; i > 1; i--)
+    cout << options.zoomY << " " << h << " " << options.zoomX << " " << w << endl;
+    cout << options.offsetY << " " << options.offsetX << endl;
+    samplesize-=options.offsetX;
+    for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
-        SDL_RenderDrawLine(renderer,w-i,samples[samples.size()-i]*h/4096,w-i+1,samples[samples.size()-i+1]*h/4096);
+        SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,(samples[samplesize-i]*h/4096)+options.offsetY,(w-i+1)*options.zoomX,(samples[samplesize-i+1/options.zoomX]*h/4096)+options.offsetY);
     }
     eventHandler->stateHandler();
     SDL_RenderPresent(renderer);
