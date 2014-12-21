@@ -63,14 +63,15 @@ void EventHandler::stateHandler()
     {
         options->offsetX=0;
     }
+    if(options->offsetX>samples->size()-1)
+    {
+        options->offsetX=samples->size()-1;
+    }
     //Mouse
     int xpos,ypos;
-    Uint32 mouseState=SDL_GetMouseState(&xpos,&ypos);
-    SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    if((int)samples->size()-1-w+xpos>=0 and samples->size()>1+w-xpos)
-    {
-        drawFilledCircle(renderer,xpos,samples->at((int)samples->size()-1-w+xpos)*h/4096,5);
-    }
+    SDL_GetMouseState(&xpos,&ypos);
+    options->mouseX=xpos;
+    options->mouseY=ypos;
 }    
 void EventHandler::handleEvents()
 {
@@ -100,7 +101,22 @@ void EventHandler::handleEvents()
 
 void EventHandler::handleKeyDownEvent(SDL_Event &event)
 {
-
+    if(event.key.keysym.scancode==SDL_SCANCODE_R)
+    {
+        if(event.key.keysym.mod==KMOD_LCTRL)
+        {
+            options->zoomY=1;
+            options->zoomX=1;
+            options->offsetY=0;
+        }
+        options->offsetX=0;
+    }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_SPACE) 
+    {
+        if(not (event.key.keysym.mod==KMOD_LCTRL))
+        options->paused^=1;
+        if(options->paused) options->pausedSamplesize=samples->size();
+    }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)
 {

@@ -23,6 +23,8 @@ class UIDrawer
         ~UIDrawer();
         int loop();  
     private:
+        void drawUI();
+        void drawSamples();
         void GetNewData();
         void Draw();
 };
