@@ -6,14 +6,15 @@
 #include <string.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cmath>
+#include "../server/structures.h"
 #define SAMPLESIZE 1
 #define LOOPS 1000000
 #define PORT 3490
-#define MAXSIZE 8
 /* ----------------------------------------------------------- */
 
 int main(int argc, char *argv[])
@@ -21,7 +22,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in server_info;
     struct hostent *he;
     int socket_fd,num;
-    int buffer[MAXSIZE];
+    sample cursample;
     int sample;
 	int i=0 ,j;
 	int buffer_AIN_0[SAMPLESIZE] ={0};
@@ -53,10 +54,11 @@ int main(int argc, char *argv[])
     double v=0;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        buffer[0]=(int)(sin(v)*2048);
-        v+=0.003;
-//        usleep(10000);
-        if ((send(socket_fd,buffer, (sizeof(buffer)/sizeof(*buffer)),0))== -1) {
+        cursample.value=(int)(sin(v)*2048);
+        v+=0.001;
+        gettimeofday(&cursample.tv,NULL);
+        //usleep(1000);
+        if (write(socket_fd,&cursample, sizeof(cursample))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_fd);
             exit(1);

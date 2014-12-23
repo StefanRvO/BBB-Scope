@@ -1,6 +1,6 @@
 #include "EventHandler.h"
 #include <iostream>
-EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, std::vector<unsigned short> &samples_, std::vector<unsigned long long> &times_)
+EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, std::vector<double> &samples_, std::vector<unsigned long long> &times_)
 {
     window=window_;
     renderer=renderer_;
@@ -59,7 +59,12 @@ void EventHandler::stateHandler()
     {
         options->offsetY-=5/(options->zoomY);
     }
-    if(options->offsetX<0)
+    if(options->offsetX<(long long)options->pausedSamplesize-(long long)samples->size() and options->paused)
+    {
+        std::cout << (long long)options->pausedSamplesize-(long long)samples->size() << std::endl;
+        options->offsetX=(long long)options->pausedSamplesize-(long long)samples->size();
+    }
+    else if(options->offsetX<0 and !options->paused)
     {
         options->offsetX=0;
     }

@@ -13,7 +13,7 @@
 #define SAMPLESIZE 1
 #define LOOPS 1000000
 #define PORT 3490
-#define MAXSIZE 2
+#define MAXSIZE 8
 /* ----------------------------------------------------------- */
 
 int main(int argc, char *argv[])

@@ -2,8 +2,6 @@
 
 SampleGrabber::SampleGrabber(int port)
 {
-    sBuffer=new RingBuffer<unsigned short,1000000>;
-    tBuffer=new RingBuffer<unsigned long long,1000000>;
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0))== -1) 
     {
         fprintf(stderr, "Socket failure!!\n");
@@ -46,7 +44,7 @@ void SampleGrabber::run()
          printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
         while(true) 
         {
-            if ((num = recv(client_fd, buffer, BUFSIZE,0))== -1) 
+            if ((num = read(client_fd, &cursample, sizeof(sample)))== -1) 
             {
                 perror("recv");
                 exit(1);
@@ -56,9 +54,8 @@ void SampleGrabber::run()
                 printf("Connection closed\n");
                 break;
             }
-            gettimeofday(&tv,NULL);
-            tBuffer->push_back(tv.tv_sec*1000000+tv.tv_usec);
-            sBuffer->push_back(*buffer+2048);
+            tBuffer.push_back(cursample.tv.tv_sec*1000000+cursample.tv.tv_usec);
+            sBuffer.push_back(cursample.value+2048);
         }
     }
 }

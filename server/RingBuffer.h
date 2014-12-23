@@ -4,20 +4,25 @@
 #include <stdexcept>
 #include <exception>
 #include <array>
+#include <mutex>
 template <class T,std::size_t _size>
 class RingBuffer 
 {
     private:
-        std::array<T,_size> Buffer;
-        int HEAD;
-        int TAIL;
-        int ioTotal;
+        std::array<T,_size> *Buffer;
+        size_t cap;
+        long long HEAD;
+        long long TAIL;
+        long long ioTotal;
+        std::mutex lock;
     public:
         RingBuffer()
         {
+            Buffer=new std::array<T,_size>;
             HEAD=0;
             TAIL=0;
             ioTotal=0;
+            cap=_size;
         }
         
         size_t size()
@@ -27,7 +32,7 @@ class RingBuffer
 
         size_t capacity()
         {
-            return Buffer.size();
+            return cap;
         }
 
         bool empty()
@@ -44,27 +49,37 @@ class RingBuffer
         {
             if (full()) 
             {
+                lock.lock();
+                *(Buffer->data()+HEAD)=element;
+                HEAD=(HEAD+1)%capacity();
                 TAIL=(TAIL+1)%capacity();
-                ioTotal--;
+                lock.unlock();
+                return;
             }
-            Buffer[HEAD]=element;
+            lock.lock();
+            *(Buffer->data()+HEAD)=element;
             HEAD=(HEAD+1)%capacity();
             ioTotal++;
+            lock.unlock();
         }
 
         T pop_front()
         {
             if (empty()) throw(std::range_error("Buffer is empty"));
-            T returnval=Buffer[TAIL];
+            lock.lock();
+            T returnval=*(Buffer->data()+TAIL);
             TAIL=(TAIL+1)%capacity();
             ioTotal--;
+            lock.unlock();
             return returnval;
         }
         void clear()
         {
+            lock.lock();
             HEAD=0;
             TAIL=0;
             ioTotal=0;
+            lock.unlock();
         }
 };
 

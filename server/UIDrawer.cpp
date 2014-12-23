@@ -1,6 +1,6 @@
 #include "UIDrawer.h"
 using namespace std;
-UIDrawer::UIDrawer(SampleGrabber* Grabber_)
+UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 {
     Grabber=Grabber_;
     //Init SDL
@@ -8,6 +8,15 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_)
     {
         cout << "SDL_INIT Error: " << SDL_GetError() << endl;
         exit(0);
+    }
+    // Initialize SDL_ttf library
+    if (TTF_Init() != 0)
+    {
+        cerr << "TTF_Init() Failed: " << TTF_GetError() << endl;
+        SDL_Quit();
+        TTF_Quit();
+        exit(1);
+        
     }
     
     //Create a window
@@ -18,6 +27,7 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_)
     {
 	    cout << "SDL_CreateWindow Error: " << SDL_GetError() << endl;
 	    SDL_Quit();
+	    TTF_Quit();
 	    exit(0);
     }
     //Create Renderer
@@ -27,14 +37,17 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_)
         SDL_DestroyWindow(window);
 	    cout << "SDL_CreateRenderer Error: " << SDL_GetError() << endl;
 	    SDL_Quit();
+	    TTF_Quit();
 	    exit(0);
     }
     eventHandler=new EventHandler(window,renderer,&options,samples,times);
-    
+    Pfinder=new PeriodFinder(&options,&samples,window);   
 }
 UIDrawer::~UIDrawer()
 {
     delete eventHandler;
+    delete Pfinder;
+    TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -45,21 +58,27 @@ int UIDrawer::loop()
     while (options.alive)
     {
         GetNewData();
+        Pfinder->renewPlans();
+        Pfinder->calcPeriode();
         eventHandler->handleEvents();
         eventHandler->stateHandler();
         Draw();
+        timer.tick();
+        Pfinder->finish();
+        cout << Pfinder->getPeriode() << endl;
     }
     return 0;
 }
 void UIDrawer::GetNewData()
 {
-    while(Grabber->sBuffer->size()>1)
+    while(!(Grabber->sBuffer.empty()))
     {
-        samples.push_back(Grabber->sBuffer->pop_front());
+        samples.push_back(Grabber->sBuffer.pop_front());
     }
-    while(times.size()<samples.size() and Grabber->tBuffer->size()>1 )
+    while(times.size()<samples.size())
     {
-        times.push_back(Grabber->tBuffer->pop_front());
+        while(Grabber->tBuffer.empty());
+        times.push_back(Grabber->tBuffer.pop_front());
     }
 }
 void UIDrawer::Draw()
@@ -88,13 +107,44 @@ void UIDrawer::drawUI()
     //Draw circle at mousepos
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
     int index=(int)samplesize-1-w+options.mouseX/options.zoomX;
-    if(index>0 and index<samples.size()-1)
+    if(index>0 and index<(int)samples.size()-1)
     {
-        drawFilledCircle(renderer,options.mouseX,samples[index]*(h)/4096+options.offsetY,5);
+        drawFilledCircle(renderer,options.mouseX,(4096-samples[index])*(h)/4096+options.offsetY,5);
+        //write out value
     }
     //Draw axes
+    SDL_GetWindowSize(window,&w,&h);
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    SDL_RenderDrawLine(renderer,0,h/2+options.offsetY,w*options.zoomX,h/2+options.offsetY);
+    SDL_RenderDrawLine(renderer,0,h/2+options.offsetY/options.zoomY,w,h/2+options.offsetY/options.zoomY);
+    SDL_RenderDrawLine(renderer,w/2,0,w/2,h);
+    TextDrawer txtDraw("FreeSans.ttf",w/30);
+    
+    txtDraw.DrawText(renderer,(string("Framerate: ")+std::to_string(timer.getFPS())).c_str(),0,0,200,200,40,0); //print framerate
+    if(index>0 and index<(int)samples.size()-1)
+    {
+        txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples[index])).c_str(),0,h/30,200,200,40,0);
+        long long diff=times[index]-times[(int)times.size()-1];
+        txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
+        if(options.paused)
+        {
+            diff=times[index]-times[options.pausedSamplesize-1];
+            txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
+        }
+    }
+    if((int)samples.size()>5)
+    {
+        long long diff=0;
+        int indexpoint=5;
+        while(diff<1000000 and indexpoint<(int)times.size())
+        {
+            diff=times[(int)times.size()-1]-times[(int)times.size()-indexpoint-1];
+            indexpoint=indexpoint*1.3+5;
+        }
+        float rate=1000000./diff;
+        rate*=indexpoint;
+        txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string((int)rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+    }
+    
 }
 
 void UIDrawer::drawSamples()
@@ -105,12 +155,25 @@ void UIDrawer::drawSamples()
     w/=options.zoomX;
     h/=options.zoomY;
     int i=w;
-    long samplesize;
+    static long samplesize;
     if(options.paused)
     {
         samplesize=options.pausedSamplesize;
     }
-    else samplesize=samples.size();
+    else 
+    {   //try to fit to signal so the signal locks in place
+        long newsamplesize=samples.size();
+        long diff=newsamplesize-samplesize;
+        
+        //cut diff down to multiple of frequency
+        int periode=Pfinder->getPeriode();
+        if (periode!=0)
+        {
+            diff/=periode;
+            diff*=periode;
+        }
+        samplesize+=diff;
+    }
     
     if(samplesize-1 < w) i=samplesize-1;
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
@@ -120,6 +183,6 @@ void UIDrawer::drawSamples()
     for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
         if(samplesize-i<0) continue;
-        SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,(samples[samplesize-i]*h/4096)+options.offsetY,(w-i+1)*options.zoomX,(samples[samplesize-i+((int)(0.5/options.zoomX))+1]*h/4096)+options.offsetY);
+        SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
     }
 }

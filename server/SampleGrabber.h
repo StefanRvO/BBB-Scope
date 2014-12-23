@@ -12,22 +12,21 @@
 #include <string.h>
 #include <thread>
 #include "RingBuffer.h"
-#define BACKLOG 10
-#define BUFSIZE 8
+#include "structures.h"
+#define BACKLOG 10000
 class SampleGrabber
 {
     private:
-        int buffer[BUFSIZE];
+        sample cursample;
         struct sockaddr_in server;
         struct sockaddr_in dest;
         int socket_fd, client_fd,num;
         socklen_t size;
         std::thread t1;
-        timeval tv;
-    
+  
     public:
-        RingBuffer<unsigned short,1000000> *sBuffer;
-        RingBuffer<unsigned long long,1000000> *tBuffer;
+        RingBuffer<double,10000000> sBuffer;
+        RingBuffer<unsigned long long,10000000> tBuffer;
         SampleGrabber(int port);
         ~SampleGrabber();
         void run();           

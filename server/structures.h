@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdlib> 
+#include <sys/time.h>
 struct Options
 {
     bool alive=true;
@@ -9,5 +11,10 @@ struct Options
     int mouseX=0;
     int mouseY=0;
     bool paused=false;
-    long pausedSamplesize;
+    size_t pausedSamplesize;
+};
+struct sample
+{
+    short value;
+    timeval tv;
 };
