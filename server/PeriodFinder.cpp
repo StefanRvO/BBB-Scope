@@ -73,7 +73,7 @@ void PeriodFinder::calcsize() //return the number of samples to perform fft on
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
     w/=options->zoomX;
-    samplesize-=options->offsetX;
+    //samplesize-=options->offsetX; //why are we doing this?
     if(w<samplesize) size = w;
     else size = samplesize;
     /*size=sqrt(size);
