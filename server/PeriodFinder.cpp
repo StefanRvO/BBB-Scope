@@ -14,8 +14,8 @@ PeriodFinder::PeriodFinder(Options *options_, vector<double> *samples_, SDL_Wind
     //Alocate memory
     calcsize();
     calcpointer();
-    final=fftw_alloc_real(size);
-    out = (complex<double> *) fftw_alloc_complex(size/2+1);
+    final=fftw_alloc_real(size*2);
+    out = (complex<double> *) fftw_alloc_complex(size+1);
     
     //create plans
     forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
@@ -34,21 +34,18 @@ void PeriodFinder::findPeriode()
     {
         final[i]=in[i]*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
+    for(int i=size; i<size*2; i++)
+    {
+        final[i]=0;
+    }
     fastAutocorrelate();
     long first=0;
-    long second=0;
-    for (long i=1; i< size/2; i++)
+    for (long i=1; i< size/3; i++)
     {
         //Find largest peak not at 0
         if((final[first]<final[i] or first==0) and final[i]>final[i-1]) first=i;
     }
-    for (long i=first+1; i< size/2; i++)
-    {
-        //Find second largest peak not at 0
-        if((final[second]<final[i] or second==0) and final[i]>final[i-1]) second=i;
-    }
-    if (first==0) second=0;
-    periode = second-first;
+    periode = first;
     runningAvgBuf.push_back(periode);
 }
 void PeriodFinder::fastAutocorrelate()
@@ -79,9 +76,9 @@ void PeriodFinder::calcsize() //return the number of samples to perform fft on
     samplesize-=options->offsetX;
     if(w<samplesize) size = w;
     else size = samplesize;
-    size=sqrt(size);
-    size*=size;
-    if(getRunningAvgPeriode()==200) cout << options->zoomX << " " << size << endl;
+    /*size=sqrt(size);
+    size*=size;*/
+    //if(getRunningAvgPeriode()==200) cout << options->zoomX << " " << size << endl;
 }
 void PeriodFinder::calcpointer()
 {
@@ -134,8 +131,8 @@ void PeriodFinder::renewPlans()
     fftw_free(final);
     fftw_destroy_plan(forward);
     fftw_destroy_plan(backward);
-    final=fftw_alloc_real(size);
-    out = (complex<double> *) fftw_alloc_complex(size/2+1);
+    final=fftw_alloc_real(size*2);
+    out = (complex<double> *) fftw_alloc_complex(size+1);
     forward=fftw_plan_dft_r2c_1d(size, in, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
     backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     

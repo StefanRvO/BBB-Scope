@@ -12,8 +12,10 @@ This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
 The autocorrelation is performed by a fft and a inverse fft
 This is probably too slow to run on each frame update.
+Later versions is partly inspired by 
+https://stackoverflow.com/questions/4225432/how-to-compute-frequency-of-data-using-fft
 */
-#define AVGSIZE 60 
+#define AVGSIZE 1 
 class PeriodFinder {
 
     private:

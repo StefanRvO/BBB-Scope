@@ -147,7 +147,6 @@ void UIDrawer::drawSamples()
     SDL_GetWindowSize(window,&w,&h);
     w/=options.zoomX;
     h/=options.zoomY;
-    int i=w;
     if(options.paused)
     {
         samplesize=options.pausedSamplesize-options.offsetX;
@@ -165,8 +164,15 @@ void UIDrawer::drawSamples()
             diff*=periode;
         }
         samplesize+=diff;
+        //Find the min of the signal in a range backward of periode*1.5
+        int min=1;
+        for(int i=1; i<periode*1.5;i++)
+        {
+            if(samples[samplesize-i]<samples[samplesize-min]) min=i;
+        }
+        samplesize-=min;
     }
-    
+    int i=w;
     if(samplesize-1 < w) i=samplesize-1;
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
     /*cout << options.zoomY << " " << h << " " << options.zoomX << " " << w << endl;

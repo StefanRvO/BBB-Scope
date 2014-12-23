@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     double v=0;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        cursample.value=sin(v)*2048+(rand()%200-100);
+        cursample.value=(sin(v)+sin(v*0.3)+sin(v*1.2))*2048/3;
         v+=0.01*M_PI;
         /*if(v-(int)v>0.7)  cursample.value=1000;
         else cursample.value=-1000;*/
