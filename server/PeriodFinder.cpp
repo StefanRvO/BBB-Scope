@@ -40,10 +40,10 @@ void PeriodFinder::findPeriode()
     }
     fastAutocorrelate();
     long first=0;
-    for (long i=1; i< size/3; i++)
+    for (long i=2; i< size/3; i++)
     {
         //Find largest peak not at 0
-        if((final[first]<final[i] or first==0) and final[i]>final[i-1]) first=i;
+        if((final[first]<final[i] or first==0) and final[i]>final[i-1] and final[i]>final[i-2]) first=i;
     }
     periode = first;
     runningAvgBuf.push_back(periode);

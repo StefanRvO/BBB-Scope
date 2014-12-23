@@ -15,7 +15,7 @@ This is probably too slow to run on each frame update.
 Later versions is partly inspired by 
 https://stackoverflow.com/questions/4225432/how-to-compute-frequency-of-data-using-fft
 */
-#define AVGSIZE 1 
+#define AVGSIZE 15 
 class PeriodFinder {
 
     private:
