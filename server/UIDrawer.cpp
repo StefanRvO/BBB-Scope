@@ -95,20 +95,20 @@ void UIDrawer::drawUI()
 {
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
-    w/=options.zoomX;
-    h/=options.zoomY;
+    
+    int scaledW=w/options.zoomX;
+    int scaledH=h/options.zoomY;
     //Draw circle at mousepos
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    int index=(int)samplesize-1-w+options.mouseX/options.zoomX;
+    int index=(int)samplesize-1-scaledW+options.mouseX/options.zoomX;
     if(index>0 and index<(int)samples.size()-1)
     {
-        drawFilledCircle(renderer,options.mouseX,(4096-samples[index])*(h)/4096+options.offsetY,5);
+        drawFilledCircle(renderer,options.mouseX,(4096-samples[index])*(scaledH)/4096+options.offsetY,5);
         //write out value
     }
     //Draw axes
-    SDL_GetWindowSize(window,&w,&h);
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    SDL_RenderDrawLine(renderer,0,h/2+options.offsetY/options.zoomY,w,h/2+options.offsetY/options.zoomY);
+    SDL_RenderDrawLine(renderer,0,scaledH/2+options.offsetY,w,scaledH/2+options.offsetY);
     SDL_RenderDrawLine(renderer,w/2,0,w/2,h);
     TextDrawer txtDraw("FreeSans.ttf",w/30);
     
@@ -124,6 +124,8 @@ void UIDrawer::drawUI()
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
         }
     }
+    
+    //Estimate and draw samplerate
     if((int)samples.size()>5)
     {
         long long diff=0;
@@ -164,13 +166,25 @@ void UIDrawer::drawSamples()
             diff*=periode;
         }
         samplesize+=diff;
-        //Find the min of the signal in a range backward of periode*1.5
-        int min=1;
+        //Find the min of the signal in a range backward of periode*1.5. The min+1 have to be bigger than avg of last x samples
+        int min=0;
+        const int runningavg=3;
         for(int i=1; i<periode*1.5;i++)
         {
-            if(samples[samplesize-i]<samples[samplesize-min]) min=i;
+            if(samples[samplesize-i]<=samples[samplesize-min] ) 
+            {
+                float avg=0;
+                for(int j=0;j<runningavg;j++)
+                {
+                    avg+=samples[samplesize-i-j];
+                }
+                avg/=runningavg;
+                if(avg>samples[samplesize-i+1])  min=i;
+            }
         }
         samplesize-=min;
+        //Hack to make this work with flat-bootom waves.
+        
     }
     int i=w;
     if(samplesize-1 < w) i=samplesize-1;
