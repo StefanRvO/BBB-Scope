@@ -6,13 +6,14 @@
 #include <thread>
 #include <vector>
 #include <unistd.h>
+#include "RingBuffer.h"
 /*
 This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
 The autocorrelation is performed by a fft and a inverse fft
 This is probably too slow to run on each frame update.
 */
-
+#define AVGSIZE 100 
 class PeriodFinder {
 
     private:
@@ -30,6 +31,7 @@ class PeriodFinder {
         double *in;
         std::thread t1;
         int periode;
+        RingBuffer<int,AVGSIZE> runningAvgBuf;
     public:
         PeriodFinder(Options *options_, std::vector<double> *samples_, SDL_Window *window_);
         void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
@@ -38,6 +40,7 @@ class PeriodFinder {
         void renewPlans(); //make new plans (eg. if the display has been resized)
         ~PeriodFinder();
         void findPeriode();
+        int getRunningAvgPeriode();
         void finish();
         bool isDone();
         bool done;

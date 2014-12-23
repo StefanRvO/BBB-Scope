@@ -81,5 +81,16 @@ class RingBuffer
             ioTotal=0;
             lock.unlock();
         }
+        float getAvg()
+        {
+            size_t tmpsize=size();
+            long long tmpTAIL=TAIL;
+            double avg=0;
+            for(unsigned int i=0; i<tmpsize;i++)
+            {
+                avg+=*(Buffer->data()+((tmpTAIL+i)%capacity()));
+            }
+            return avg/tmpsize;
+        }
 };
 

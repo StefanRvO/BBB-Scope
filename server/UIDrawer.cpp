@@ -166,7 +166,7 @@ void UIDrawer::drawSamples()
         long diff=newsamplesize-samplesize;
         
         //cut diff down to multiple of frequency
-        int periode=Pfinder->getPeriode();
+        int periode=Pfinder->getRunningAvgPeriode();
         if (periode!=0)
         {
             diff/=periode;

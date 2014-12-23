@@ -36,6 +36,7 @@ void PeriodFinder::findPeriode()
         if((final[maxi]<final[i] or maxi==0) and final[i]>final[i-1]) maxi=i;
     }
     periode = maxi;
+    runningAvgBuf.push_back(periode);
 }
 void PeriodFinder::fastAutocorrelate()
 {
@@ -100,6 +101,10 @@ bool PeriodFinder::isDone()
 int PeriodFinder::getPeriode()
 {
     return periode;
+}
+int PeriodFinder::getRunningAvgPeriode()
+{
+    return runningAvgBuf.getAvg();
 }
 void PeriodFinder::updatePlans()
 {
