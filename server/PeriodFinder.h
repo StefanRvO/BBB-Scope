@@ -13,7 +13,7 @@ It uses autocorrelation to find the frequency.
 The autocorrelation is performed by a fft and a inverse fft
 This is probably too slow to run on each frame update.
 */
-#define AVGSIZE 100 
+#define AVGSIZE 60 
 class PeriodFinder {
 
     private:

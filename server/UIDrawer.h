@@ -3,6 +3,7 @@
 #include "EventHandler.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 #include <iostream>
 #include <cstdlib>
 #include "SampleGrabber.h"
@@ -25,6 +26,7 @@ class UIDrawer
         EventHandler *eventHandler;
         Options options;
         Timer timer;
+        long samplesize=0;
     public:
         UIDrawer(SampleGrabber* Grabber_);
         ~UIDrawer();

@@ -18,7 +18,7 @@ PeriodFinder::PeriodFinder(Options *options_, vector<double> *samples_, SDL_Wind
     out = (complex<double> *) fftw_alloc_complex(size/2+1);
     
     //create plans
-    forward=fftw_plan_dft_r2c_1d(size, in, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
     backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     
 }
@@ -27,22 +27,35 @@ void PeriodFinder::findPeriode()
     if(size==0)
     {
         periode=0;
+        runningAvgBuf.push_back(periode);
         return;
     }
+    for(int i=0;i<size;i++)
+    {
+        final[i]=in[i]*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+    }
     fastAutocorrelate();
-    long maxi=0;
+    long first=0;
+    long second=0;
     for (long i=1; i< size/2; i++)
     {
-        if((final[maxi]<final[i] or maxi==0) and final[i]>final[i-1]) maxi=i;
+        //Find largest peak not at 0
+        if((final[first]<final[i] or first==0) and final[i]>final[i-1]) first=i;
     }
-    periode = maxi;
+    for (long i=first+1; i< size/2; i++)
+    {
+        //Find second largest peak not at 0
+        if((final[second]<final[i] or second==0) and final[i]>final[i-1]) second=i;
+    }
+    if (first==0) second=0;
+    periode = second-first;
     runningAvgBuf.push_back(periode);
 }
 void PeriodFinder::fastAutocorrelate()
 {
-    fftw_execute_dft_r2c(forward,in,reinterpret_cast<fftw_complex*>(out));
+    fftw_execute(forward);
     for(int i=0; i<size/2+1;i++) out[i]*=conj(out[i]);
-    fftw_execute_dft_c2r(backward,reinterpret_cast<fftw_complex*>(out), final);
+    fftw_execute(backward);
 }
 
 PeriodFinder::~PeriodFinder()
@@ -66,6 +79,9 @@ void PeriodFinder::calcsize() //return the number of samples to perform fft on
     samplesize-=options->offsetX;
     if(w<samplesize) size = w;
     else size = samplesize;
+    size=sqrt(size);
+    size*=size;
+    if(getRunningAvgPeriode()==200) cout << options->zoomX << " " << size << endl;
 }
 void PeriodFinder::calcpointer()
 {
@@ -104,7 +120,7 @@ int PeriodFinder::getPeriode()
 }
 int PeriodFinder::getRunningAvgPeriode()
 {
-    return runningAvgBuf.getAvg();
+    return (runningAvgBuf.getAvg()+0.5);
 }
 void PeriodFinder::updatePlans()
 {
@@ -116,6 +132,8 @@ void PeriodFinder::renewPlans()
     calcsize();
     fftw_free(out);
     fftw_free(final);
+    fftw_destroy_plan(forward);
+    fftw_destroy_plan(backward);
     final=fftw_alloc_real(size);
     out = (complex<double> *) fftw_alloc_complex(size/2+1);
     forward=fftw_plan_dft_r2c_1d(size, in, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);

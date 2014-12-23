@@ -65,7 +65,7 @@ int UIDrawer::loop()
         Draw();
         timer.tick();
         Pfinder->finish();
-        cout << Pfinder->getPeriode() << endl;
+        cout << Pfinder->getRunningAvgPeriode() << endl;
     }
     return 0;
 }
@@ -97,13 +97,6 @@ void UIDrawer::drawUI()
     SDL_GetWindowSize(window,&w,&h);
     w/=options.zoomX;
     h/=options.zoomY;
-    long samplesize;
-    if(options.paused)
-    {
-        samplesize=options.pausedSamplesize;
-    }
-    else samplesize=samples.size();
-    samplesize-=options.offsetX;
     //Draw circle at mousepos
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
     int index=(int)samplesize-1-w+options.mouseX/options.zoomX;
@@ -119,7 +112,7 @@ void UIDrawer::drawUI()
     SDL_RenderDrawLine(renderer,w/2,0,w/2,h);
     TextDrawer txtDraw("FreeSans.ttf",w/30);
     
-    txtDraw.DrawText(renderer,(string("Framerate: ")+std::to_string(timer.getFPS())).c_str(),0,0,200,200,40,0); //print framerate
+    txtDraw.DrawText(renderer,(string("Framerate: ")+std::to_string(timer.getAvgFPS())).c_str(),0,0,200,200,40,0); //print framerate
     if(index>0 and index<(int)samples.size()-1)
     {
         txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples[index])).c_str(),0,h/30,200,200,40,0);
@@ -155,14 +148,13 @@ void UIDrawer::drawSamples()
     w/=options.zoomX;
     h/=options.zoomY;
     int i=w;
-    static long samplesize;
     if(options.paused)
     {
-        samplesize=options.pausedSamplesize;
+        samplesize=options.pausedSamplesize-options.offsetX;
     }
     else 
     {   //try to fit to signal so the signal locks in place
-        long newsamplesize=samples.size();
+        long newsamplesize=(long)samples.size()-options.offsetX;
         long diff=newsamplesize-samplesize;
         
         //cut diff down to multiple of frequency
@@ -179,10 +171,12 @@ void UIDrawer::drawSamples()
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
     /*cout << options.zoomY << " " << h << " " << options.zoomX << " " << w << endl;
     cout << options.offsetY << " " << options.offsetX << endl; */
-    samplesize-=options.offsetX;
+    //samplesize-=options.offsetX;
     for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
         if(samplesize-i<0) continue;
-        SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
+        //SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
+        thickLineRGBA (renderer, (w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY,
+            1, 255,0,0,255);
     }
 }

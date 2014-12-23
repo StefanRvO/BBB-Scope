@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <cmath>
 #include "../server/structures.h"
+#include <ctime>
 #define SAMPLESIZE 1
 #define LOOPS 1000000
 #define PORT 3490
@@ -19,6 +20,7 @@
 
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
     struct sockaddr_in server_info;
     struct hostent *he;
     int socket_fd,num;
@@ -54,8 +56,10 @@ int main(int argc, char *argv[])
     double v=0;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        cursample.value=(int)(sin(v)*2048);
-        v+=0.001;
+        cursample.value=sin(v)*2048+(rand()%200-100);
+        v+=0.01*M_PI;
+        /*if(v-(int)v>0.7)  cursample.value=1000;
+        else cursample.value=-1000;*/
         gettimeofday(&cursample.tv,NULL);
         //usleep(1000);
         if (write(socket_fd,&cursample, sizeof(cursample))== -1) {

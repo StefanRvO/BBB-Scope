@@ -1,17 +1,21 @@
 #pragma once
 #include <unistd.h>
+#include "RingBuffer.h"
+#define AVGLENGHT 30
 class Timer
 {
     private: 
     timeval last;
     timeval slast;
     int framerate;
+    RingBuffer<float,AVGLENGHT> *buf;
     public:
     Timer(int fps)
     {
         framerate=fps;
         gettimeofday(&last,NULL);
         gettimeofday(&slast,NULL);
+        buf=new RingBuffer<float,AVGLENGHT>;
     }
     void tick()
     {
@@ -66,7 +70,18 @@ class Timer
         long long lastT=last.tv_sec*1000000+last.tv_usec;
         long long slastT=slast.tv_sec*1000000+slast.tv_usec;
         long diff=lastT-slastT;
-        return (int)((float)(1000000./diff)+0.5);
+        float fps=(float)(1000000./diff);
+        buf->push_back(fps);
+        return (int)(fps+0.5);
+    }
+    int getAvgFPS()
+    {
+        long long lastT=last.tv_sec*1000000+last.tv_usec;
+        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
+        long diff=lastT-slastT;
+        float fps=(float)(1000000./diff);
+        buf->push_back(fps);
+        return buf->getAvg();
     }
 
 };
