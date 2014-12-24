@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     struct hostent *he;
     int socket_fd,num;
     sample cursample;
-    int sample;
 	int i=0 ,j;
 	int buffer_AIN_0[SAMPLESIZE] ={0};
 
@@ -54,6 +53,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
     double v=0;
+    int size;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
         cursample.value=(sin(v)+sin(v*0.3)+sin(v*1.2))*2048/3+(rand()%1000-500);
@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
         /*if(v-(int)v>0.7)  cursample.value=1000+rand()%20;
         else cursample.value=-1000+rand()%20;*/
         gettimeofday(&cursample.tv,NULL);
-        //usleep(1000);
-        if (write(socket_fd,&cursample, sizeof(cursample))== -1) {
+        usleep(100);
+        if (size=write(socket_fd,&cursample, sizeof(cursample))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_fd);
             exit(1);

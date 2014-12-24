@@ -33,6 +33,7 @@ SampleGrabber::SampleGrabber(int port)
 }
 void SampleGrabber::run()
 {
+    int pointeroffset=0;
     while(true)
     {
         size = sizeof(struct sockaddr_in);  
@@ -44,7 +45,7 @@ void SampleGrabber::run()
          printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
         while(true) 
         {
-            if ((num = read(client_fd, &cursample, sizeof(sample)))== -1) 
+            if ((num = read(client_fd, ((char *)&cursample)+pointeroffset, sizeof(cursample)-pointeroffset))== -1) 
             {
                 perror("recv");
                 exit(1);
@@ -54,8 +55,12 @@ void SampleGrabber::run()
                 printf("Connection closed\n");
                 break;
             }
+            pointeroffset=(pointeroffset+num)%sizeof(cursample);
+            if(pointeroffset==0)
+            {
             tBuffer.push_back(cursample.tv.tv_sec*1000000+cursample.tv.tv_usec);
             sBuffer.push_back(cursample.value+2048);
+            }
         }
     }
 }
