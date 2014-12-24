@@ -1,5 +1,5 @@
 
-LIB_PATH = ./BBBio_lib/
+LIB_PATH = ./BBBIOlib/BBBio_lib/
 ADC_PATH=./
 #TOOLKIT_PATH = ./Toolkit/
 #LAB_PATH = ./Lab/

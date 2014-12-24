@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "BBBio_lib/BBBiolib.h"
+#include "BBBIOlib/BBBio_lib/BBBiolib.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	/* BBBIOlib init*/
 	iolib_init();
 
-	BBBIO_ADCTSC_module_ctrl(1);
+	BBBIO_ADCTSC_module_ctrl(BBBIO_ADC_WORK_MODE_BUSY_POLLING,1);
 	BBBIO_ADCTSC_channel_ctrl(BBBIO_ADC_AIN0, BBBIO_ADC_STEP_MODE_SW_CONTINUOUS, 0, 1, BBBIO_ADC_STEP_AVG_1, buffer_AIN_0, SAMPLESIZE);
 	BBBIO_ADCTSC_channel_enable(BBBIO_ADC_AIN0);
 
