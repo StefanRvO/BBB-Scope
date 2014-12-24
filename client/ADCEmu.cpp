@@ -56,12 +56,12 @@ int main(int argc, char *argv[])
     int size;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        cursample.value=(sin(v)+sin(v*0.3)+sin(v*1.2))*2048/3+(rand()%1000-500);
+        cursample.value=(sin(v)+sin(v*0.3)+sin(v*1.2))*2048/3;
         v+=0.01*M_PI;
-        /*if(v-(int)v>0.7)  cursample.value=1000+rand()%20;
-        else cursample.value=-1000+rand()%20;*/
+        /*if(v-(int)v>0.7)  cursample.value=1000;
+        else cursample.value=-1000;*/
         gettimeofday(&cursample.tv,NULL);
-        usleep(100);
+        //usleep(100);
         if (size=write(socket_fd,&cursample, sizeof(cursample))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_fd);
