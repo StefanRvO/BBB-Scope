@@ -134,7 +134,7 @@ void PeriodFinder::renewPlans()
     fftw_destroy_plan(backward);
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
-    forward=fftw_plan_dft_r2c_1d(size, in, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
     backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     
 }

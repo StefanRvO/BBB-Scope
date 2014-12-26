@@ -16,7 +16,7 @@ void EventHandler::stateHandler()
     //Keyboard
     int lenght;
     const Uint8* keyState=SDL_GetKeyboardState(&lenght);
-    if (keyState[SDL_SCANCODE_KP_PLUS] and !keyState[SDL_SCANCODE_LCTRL])
+    if (keyState[SDL_SCANCODE_KP_PLUS] and !keyState[SDL_SCANCODE_LCTRL] and options->zoomX<3)
     {
         double newZoomX=options->zoomX+options->zoomX*0.02;
         double zoom_ratio=newZoomX/options->zoomX;
@@ -121,7 +121,7 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     {
         if(not (event.key.keysym.mod==KMOD_LCTRL))
         options->paused^=1;
-        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode);
+        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode)+options->offsetX;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_M)
     {

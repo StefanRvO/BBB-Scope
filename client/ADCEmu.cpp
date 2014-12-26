@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <cmath>
 #include "../server/structures.h"
+#include "../server/Timer.h"
 #include <ctime>
 #define SAMPLESIZE 1
 #define LOOPS 1000000
@@ -20,6 +21,7 @@
 
 int main(int argc, char *argv[])
 {
+    Timer t(100);
     srand(time(NULL));
     struct sockaddr_in server_info;
     struct hostent *he;
@@ -55,18 +57,17 @@ int main(int argc, char *argv[])
     double v=0;
     int size;
     while(1) {
+        gettimeofday(&cursample.tv,NULL);
         //fgets(buffer,MAXSIZE-1,stdin);
         //cursample.value=v*2048+rand()%200-100;
         //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%200-100;
-        v+=0.01;
         //if(v>1) cursample.value=(2-v)*2048+rand()%200-100;
-        if(v-(int)v>0.7)  cursample.value=(sin(v*10)+sin(v*20)+sin(v*30))*1500/3+1000;
-        else cursample.value=(sin(v)+sin(v*2)+sin(v*3))*1500/3-1000;
+        cursample.value=sin((cursample.tv.tv_sec*1000.+cursample.tv.tv_usec/1000.)*0.1)*1500;
+        t.highPresisionTick();
+        //else cursample.value=(sin(v)+sin(v*2)+sin(v*3))*1500/3-1000;
         //else
         //cursample.value=v*2048+rand()%200-100;
         //if(v>2) v=0;
-        gettimeofday(&cursample.tv,NULL);
-        //usleep(100);
         if (size=write(socket_fd,&cursample, sizeof(cursample))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_fd);

@@ -55,6 +55,7 @@ UIDrawer::~UIDrawer()
 
 int UIDrawer::loop()
 {
+    long framecounter=0;
     while (options.alive)
     {
         GetNewData();
@@ -100,7 +101,8 @@ void UIDrawer::drawUI()
     int scaledH=h/options.zoomY;
     //Draw circle at mousepos
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    int index=(int)samplesize-1-scaledW+options.mouseX/options.zoomX;
+    //review index calculations. May be a bit off.
+    long index=samplesize-1-(scaledW+options.mouseX/options.zoomX);
     if(index>0 and index<(int)samples.size()-1)
     {
         drawFilledCircle(renderer,options.mouseX,(4096-samples[index])*(scaledH)/4096+options.offsetY,5);
@@ -130,14 +132,18 @@ void UIDrawer::drawUI()
     {
         long long diff=0;
         int indexpoint=5;
+        int previndexpoint=5;
         while(diff<1000000 and indexpoint<(int)times.size())
         {
             diff=times[(int)times.size()-1]-times[(int)times.size()-indexpoint-1];
+            previndexpoint=indexpoint;
             indexpoint=indexpoint*1.3+5;
         }
-        float rate=1000000./diff;
-        rate*=indexpoint;
-        txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string((int)rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+        cout << previndexpoint << "\t" << diff << endl;
+        float rate=previndexpoint/(double) diff;
+        rate*=1000000; //get Hz istead of Mhz
+        cout << rate << endl;
+        txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     }
         txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
         switch (options.lockmode)
@@ -177,7 +183,7 @@ void UIDrawer::drawSamples()
     }
     else 
     {   //try to fit to signal so the signal locks in place
-        samplesize=(long)samples.size()-options.offsetX;
+        samplesize=(long)samples.size()-(options.offsetX);
         samplesize=Pfinder->findSamplesize(samplesize,options.lockmode);
     }
     int i=w;
