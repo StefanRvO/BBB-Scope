@@ -192,7 +192,7 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
         }
         samplesize-=biggestchangeindex;
     }
-    else if(mode==3) //STEPLOCK
+    else if(mode==3) //minlock, smooth
     {
         //Smoth the wave before analysing. Find min.
         if(samples->size()>5 and samplesize>5)
@@ -311,12 +311,12 @@ int PeriodFinder::FindBestLockMode(long samplesize)
             //go back a few samples each time and calc the diff compared to last time
             long diff=tmpsamplesize-findSamplesize(tmpsamplesize-5,i);
             tmpsamplesize=tmpsamplesize-diff;
-            cout << diff << "\t" << i << "\t" << j << endl;
+           // cout << diff << "\t" << i << "\t" << j << endl;
             if (diff>maxdiff) maxdiff=diff;
             if (diff<mindiff) mindiff=diff;
         }
         long totaldiff=maxdiff-mindiff;
-        cout << i << "\t" << totaldiff << endl;
+     //   cout << i << "\t" << totaldiff << endl;
         if(totaldiff<besttotaldiff)
         {
             besttotaldiff=totaldiff;

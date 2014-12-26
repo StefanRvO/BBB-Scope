@@ -40,8 +40,8 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 	    TTF_Quit();
 	    exit(0);
     }
-    eventHandler=new EventHandler(window,renderer,&options,samples,times);
     Pfinder=new PeriodFinder(&options,&samples,window);   
+    eventHandler=new EventHandler(window,renderer,&options,samples,times,Pfinder);
 }
 UIDrawer::~UIDrawer()
 {
@@ -65,7 +65,7 @@ int UIDrawer::loop()
         Draw();
         timer.tick();
         Pfinder->finish();
-        cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
+        //cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
     }
     return 0;
 }
@@ -140,7 +140,27 @@ void UIDrawer::drawUI()
         txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string((int)rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     }
         txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
-    
+        switch (options.lockmode)
+        {
+            case 0:
+                txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
+                break;
+            case 1:
+                txtDraw.DrawText(renderer,"Lockmode: Minlock",0,6*h/30,200,200,40,0);
+                break;
+            case 2:
+                txtDraw.DrawText(renderer,"Lockmode: Steplock",0,6*h/30,200,200,40,0);
+                break;
+            case 3:
+                txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,6*h/30,200,200,40,0);
+                break;
+            case 4:
+                txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,6*h/30,200,200,40,0);
+                break;
+            case 5:
+                txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,6*h/30,200,200,40,0);
+                break;
+        }
 }
 
 void UIDrawer::drawSamples()
