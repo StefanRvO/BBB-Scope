@@ -56,10 +56,15 @@ int main(int argc, char *argv[])
     int size;
     while(1) {
         //fgets(buffer,MAXSIZE-1,stdin);
-        cursample.value=(sin(v)+sin(v*0.3)+sin(v*1.2))*2048/3;
-        v+=0.01*M_PI;
+        //cursample.value=v*2048+rand()%200-100;
+        cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%200-100;
+        v+=0.01;
+        //if(v>1) cursample.value=(2-v)*2048+rand()%200-100;
         /*if(v-(int)v>0.7)  cursample.value=1000;
         else cursample.value=-1000;*/
+        //else
+        //cursample.value=v*2048+rand()%200-100;
+        //if(v>2) v=0;
         gettimeofday(&cursample.tv,NULL);
         //usleep(100);
         if (size=write(socket_fd,&cursample, sizeof(cursample))== -1) {

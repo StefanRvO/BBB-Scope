@@ -65,7 +65,7 @@ int UIDrawer::loop()
         Draw();
         timer.tick();
         Pfinder->finish();
-        cout << Pfinder->getRunningAvgPeriode() << endl;
+        cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
     }
     return 0;
 }
@@ -110,7 +110,7 @@ void UIDrawer::drawUI()
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
     SDL_RenderDrawLine(renderer,0,scaledH/2+options.offsetY,w,scaledH/2+options.offsetY);
     SDL_RenderDrawLine(renderer,w/2,0,w/2,h);
-    TextDrawer txtDraw("FreeSans.ttf",w/30);
+    TextDrawer txtDraw("FreeSans.ttf",h/30);
     
     txtDraw.DrawText(renderer,(string("Framerate: ")+std::to_string(timer.getAvgFPS())).c_str(),0,0,200,200,40,0); //print framerate
     if(index>0 and index<(int)samples.size()-1)
@@ -139,6 +139,7 @@ void UIDrawer::drawUI()
         rate*=indexpoint;
         txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string((int)rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     }
+        txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
     
 }
 
@@ -149,122 +150,15 @@ void UIDrawer::drawSamples()
     SDL_GetWindowSize(window,&w,&h);
     w/=options.zoomX;
     h/=options.zoomY;
+    
     if(options.paused)
     {
         samplesize=options.pausedSamplesize-options.offsetX;
     }
     else 
     {   //try to fit to signal so the signal locks in place
-        long newsamplesize=(long)samples.size()-options.offsetX;
-        long diff=newsamplesize-samplesize;
-        
-        //cut diff down to multiple of frequency
-        int periode=Pfinder->getRunningAvgPeriode();
-        if (periode!=0)
-        {
-            diff/=periode;
-            diff*=periode;
-        }
-        samplesize+=diff;
-        #ifdef MINLOCK
-        //Find the min of the signal in a range backward of periode*1.5. The min+1 have to be bigger than avg of last x samples
-        int min=0;
-        const int runningavg=3;
-        for(int i=1; i<periode*1.5;i++)
-        {
-            if(samples[samplesize-i]<=samples[samplesize-min] ) 
-            {
-                float avg=0;
-                for(int j=0;j<runningavg;j++)
-                {
-                    avg+=samples[samplesize-i-j];
-                }
-                avg/=runningavg;
-                if(avg>samples[samplesize-i+1])  min=i;
-            }
-        }
-        samplesize-=min;
-        #endif
-        #ifdef STEPLOCK
-        //Find the biggest (positive) change in the periode relative to the average change of the last x samples
-        const int runningavg=5;
-        float biggestchange=0;
-        int biggestchangeindex=0;
-        for(int i=1; i<periode*1.5; i++)
-        {
-            float average=0;
-            for(int j=1; j<=runningavg; j++)
-            {
-                average+=samples[samplesize-i-j]-samples[samplesize-i-j-1];
-            }
-            average/=runningavg;
-            float diff=samples[samplesize-i]-samples[samplesize-i-1]-average;
-            if(diff>biggestchange)
-            {
-               biggestchange=diff;
-               biggestchangeindex=i;
-            }
-        }
-        samplesize-=biggestchangeindex;
-        #endif
-        #ifdef SMOOTHLOCKMIN
-        //Smoth the wave before analysing. Find min.
-        if(samples.size()>5 and samplesize>5)
-        {
-            samplesize-=5;
-            int min=0;
-            float minval=99999;
-            RingBuffer<float,5> smoother;
-            for(int i=-5;i<periode*1.5; i++)
-            {
-                smoother.push_back(samples[samplesize-i]);
-                if(i>=0)
-                {
-                    if (smoother.getAvg()<minval) 
-                    {
-                        min=i+3;
-                        minval=smoother.getAvg();
-                     }
-                
-                }
-            
-            }
-            samplesize-=min;
-        }
-        #endif
-        #ifdef SMOOTHLOCKSTEPLOCK
-         //Find the biggest (positive) change in the periode relative to the average change of the last x samples, but smooth first
-        if(samples.size()>5 and samplesize>5)
-        {
-            samplesize-=5;
-            int max=0;
-            float maxval=-99999;
-            RingBuffer<float,5> smoother;
-            RingBuffer<float, 5> smoother2;
-            float lastval=0;
-            for(int i=-5;i<periode*1.5; i++)
-            {
-                smoother.push_back(samples[samplesize-i]);
-                if(i>=0)
-                {
-                    if(i>=1)
-                    {
-                        smoother2.push_back(lastval-smoother.getAvg());
-                    }
-                    if(i>=5)
-                    {
-                        if(maxval<smoother2.getAvg())
-                        {
-                            maxval=smoother2.getAvg();
-                            max=i;
-                        }
-                    }
-                    lastval=smoother.getAvg();
-                }
-            }
-            samplesize-=max;
-        }
-        #endif
+        samplesize=(long)samples.size()-options.offsetX;
+        samplesize=Pfinder->findSamplesize(samplesize,options.lockmode);
     }
     int i=w;
     if(samplesize-1 < w) i=samplesize-1;

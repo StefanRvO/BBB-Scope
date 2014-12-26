@@ -12,6 +12,7 @@ struct Options
     int mouseY=0;
     bool paused=false;
     size_t pausedSamplesize;
+    int lockmode=4;
 };
 struct sample
 {

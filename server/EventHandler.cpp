@@ -122,6 +122,15 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
         options->paused^=1;
         if(options->paused) options->pausedSamplesize=samples->size();
     }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_M)
+    {
+        options->lockmode++;
+        if(options->lockmode>5) options->lockmode=1;
+    }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_A)
+    {
+        options->lockmode=0;
+    }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)
 {

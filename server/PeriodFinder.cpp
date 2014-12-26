@@ -42,11 +42,12 @@ void PeriodFinder::findPeriode()
     long first=0;
     for (long i=2; i< size/3; i++)
     {
-        //Find largest peak not at 0
+        //Find largest peak larger than 2
         if((final[first]<final[i] or first==0) and final[i]>final[i-1] and final[i]>final[i-2]) first=i;
     }
     periode = first;
     runningAvgBuf.push_back(periode);
+    avgperiode=runningAvgBuf.getAvg()+0.5;
 }
 void PeriodFinder::fastAutocorrelate()
 {
@@ -117,7 +118,7 @@ int PeriodFinder::getPeriode()
 }
 int PeriodFinder::getRunningAvgPeriode()
 {
-    return (runningAvgBuf.getAvg()+0.5);
+    return avgperiode;
 }
 void PeriodFinder::updatePlans()
 {
@@ -137,8 +138,195 @@ void PeriodFinder::renewPlans()
     backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     
 }
+long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
+{
+    //This code is not safe. May read out of bounds TOFIX
+    if(mode==0)
+    {
+        //search for best lockmode
+        options->lockmode=FindBestLockMode(samplesize);
+        mode=options->lockmode;
+    }
+    if(mode==1) //minlock
+    {
+        //Find the min of the signal in a range backward of periode. 
+        //The min+1 have to be bigger than avg of last x samples
+        int min=0;
+        const int runningavg=3;
+        for(int i=1; i<avgperiode;i++)
+        {
+            if(*(samples->data()+samplesize-i)<=*(samples->data()+samplesize-min) ) 
+            {
+                float avg=0;
+                for(int j=0;j<runningavg;j++)
+                {
+                    avg+=*(samples->data()+samplesize-i-j);
+                }
+                avg/=runningavg;
+                if(avg>*(samples->data()+samplesize-i+1))  min=i;
+            }
+        }
+        samplesize-=min;
+    }
+    else if(mode==2) //steplock
+    {
+    //Find the biggest (positive) change in the periode relative
+    //to the average change of the last x samples
+        const int runningavg=5;
+        float biggestchange=0;
+        int biggestchangeindex=0;
+        for(int i=1; i<avgperiode; i++)
+        {
+            float average=0;
+            for(int j=1; j<=runningavg; j++)
+            {
+                average+=*(samples->data()+samplesize-i-j)-*(samples->data()+samplesize-i-j-1);
+            }
+            average/=runningavg;
+            float diff=*(samples->data()+samplesize-i)-*(samples->data()+samplesize-i-1)-average;
+            if(diff>biggestchange)
+            {
+               biggestchange=diff;
+               biggestchangeindex=i;
+            }
+        }
+        samplesize-=biggestchangeindex;
+    }
+    else if(mode==3) //STEPLOCK
+    {
+        //Smoth the wave before analysing. Find min.
+        if(samples->size()>5 and samplesize>5)
+        {
+            samplesize-=5;
+            int min=0;
+            float minval=99999;
+            RingBuffer<float,5> smoother;
+            for(int i=-5;i<avgperiode; i++)
+            {
+                smoother.push_back(*(samples->data()+samplesize-i));
+                if(i>=0)
+                {
+                    if (smoother.getAvg()<minval) 
+                    {
+                        min=i+3;
+                        minval=smoother.getAvg();
+                    }
+                
+                }
+            
+            }
+            samplesize-=min;
+        }
+    }
+    else if(mode==4)
+    {
+         //Find the biggest (positive) change in the periode relative to the average change of the last x samples, but smooth first
+         
+        if(samples->size()>5 and samplesize>5)
+        {
+            samplesize-=5;
+            int max=0;
+            float maxval=-99999;
+            RingBuffer<float,5> smoother;
+            RingBuffer<float, 5> smoother2;
+            float lastval=0;
+            for(int i=-5;i<avgperiode; i++)
+            {
+                smoother.push_back(*(samples->data()+samplesize-i));
+                if(i>=0)
+                {
+                    if(i>=1)
+                    {
+                        smoother2.push_back(lastval-smoother.getAvg());
+                    }
+                    if(i>=5)
+                    {
+                        if(maxval<smoother2.getAvg())
+                        {
+                            maxval=smoother2.getAvg();
+                            max=i;
+                        }
+                    }
+                    lastval=smoother.getAvg();
+                }
+            }
+            samplesize-=max;
+        }
+    }
+    else if(mode==5)
+    {
+         //Find the biggest (negative) change in the periode relative to the average change of the last x samples, but smooth first
+         
+        if(samples->size()>5 and samplesize>5)
+        {
+            samplesize-=5;
+            int min=0;
+            float minval=99999;
+            RingBuffer<float,5> smoother;
+            RingBuffer<float, 5> smoother2;
+            float lastval=0;
+            for(int i=-5;i<avgperiode; i++)
+            {
+                smoother.push_back(*(samples->data()+samplesize-i));
+                if(i>=0)
+                {
+                    if(i>=1)
+                    {
+                        smoother2.push_back(lastval-smoother.getAvg());
+                    }
+                    if(i>=5)
+                    {
+                        if(minval>smoother2.getAvg())
+                        {
+                            minval=smoother2.getAvg();
+                            min=i;
+                        }
+                    }
+                    lastval=smoother.getAvg();
+                }
+            }
+            samplesize-=min;
+        }
+    }
+    return samplesize;
+}
 void calcPeriodeWrapper(PeriodFinder *finder)
 {
     finder->findPeriode();
     finder->done=true;
+}
+int PeriodFinder::FindBestLockMode(long samplesize)
+{   //Tries the different lockmodes and find the most stable one.
+    long besttotaldiff=99999;
+    int bestmode=0;
+    for(int i=1;i<=5;i++)
+    {
+        //first find initial lock
+        long tmpsamplesize=samplesize;
+        long maxdiff=0;
+        long mindiff=100000000;
+        tmpsamplesize=findSamplesize(tmpsamplesize,i);
+        for(int j=0;j<10;j++)
+        {
+            //go back a few samples each time and calc the diff compared to last time
+            long diff=tmpsamplesize-findSamplesize(tmpsamplesize-5,i);
+            tmpsamplesize=tmpsamplesize-diff;
+            cout << diff << "\t" << i << "\t" << j << endl;
+            if (diff>maxdiff) maxdiff=diff;
+            if (diff<mindiff) mindiff=diff;
+        }
+        long totaldiff=maxdiff-mindiff;
+        cout << i << "\t" << totaldiff << endl;
+        if(totaldiff<besttotaldiff)
+        {
+            besttotaldiff=totaldiff;
+            bestmode=i;
+        }
+        else if(abs(totaldiff-getRunningAvgPeriode())<besttotaldiff) //to take a potential skipped periode into account, also try with periode substracted
+        {
+            besttotaldiff=abs(totaldiff-getRunningAvgPeriode());
+            bestmode=i;
+        }
+    }
+    return bestmode;
 }

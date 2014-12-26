@@ -34,6 +34,8 @@ class PeriodFinder {
         std::thread t1;
         int periode;
         RingBuffer<int,AVGSIZE> runningAvgBuf;
+        float avgperiode;
+        int FindBestLockMode(long samplesize);
     public:
         PeriodFinder(Options *options_, std::vector<double> *samples_, SDL_Window *window_);
         void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
@@ -46,5 +48,6 @@ class PeriodFinder {
         void finish();
         bool isDone();
         bool done;
+        long findSamplesize(long samplesize,int mode);
 };
 void calcPeriodeWrapper(PeriodFinder *finder);
