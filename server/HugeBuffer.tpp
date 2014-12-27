@@ -7,6 +7,17 @@ HugeBuffer<T,_size>::HugeBuffer(std::string filename_)
     memoryHandlerThread=std::thread(memoryHandlerWrapper<T,_size>,this);
     filename=filename_;
 }
+template <class T,size_t _size>
+HugeBuffer<T,_size>::HugeBuffer()
+{
+    timeval tv;
+    gettimeofday(&tv,NULL);
+    srand(tv.tv_sec^tv.tv_usec);
+    filename=std::to_string(rand());
+    filebuff =fopen(filename.c_str(),"wb+"); //open file
+    //start memory handler thread
+    memoryHandlerThread=std::thread(memoryHandlerWrapper<T,_size>,this);
+}
 
 template <class T,size_t _size>
 HugeBuffer<T,_size>::~HugeBuffer()
@@ -42,6 +53,8 @@ template <class T,size_t _size>
 T HugeBuffer<T,_size>::at(long index)
 {
     //Test if element is in loaded buffer
+    if(index<0) throw(std::range_error("negative index not allowed!"));
+    //else if(index>size()) throw(std::range_error("out of bounds!"));
     fileAccess.lock(); //this may be problematic
     if(index-filepointer>0)
     {

@@ -4,16 +4,17 @@
 #include "structures.h"
 #include "Primitives.h"
 #include "PeriodFinder.h"
+#include "HugeBuffer.h"
 class EventHandler
 {
     private:
         SDL_Window *window;
         SDL_Renderer* renderer;
         Options *options;
-        std::vector<sample> *samples;
+        HugeBuffer<sample,65000000> *samples;
         PeriodFinder *pFinder;
     public:
-        EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_,std::vector<sample> *samples_,PeriodFinder *pFinder );
+        EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_,HugeBuffer<sample,65000000> *samples_,PeriodFinder *pFinder );
         void handleEvents();
         void stateHandler();
     private:

@@ -1,7 +1,7 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, vector<sample> *samples_, SDL_Window *window_)
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,65000000> *samples_, SDL_Window *window_)
 {
     options=options_;
     samples=samples_;
@@ -32,7 +32,7 @@ void PeriodFinder::findPeriode()
     }
     for(int i=0;i<size;i++)
     {
-        final[i]=in[i].value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[i]=samples->at(i).value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
     for(int i=size; i<size*2; i++)
     {
@@ -93,10 +93,10 @@ void PeriodFinder::calcpointer()
     SDL_GetWindowSize(window,&w,&h);
     w/=options->zoomX;
     samplesize-=options->offsetX;
-    long placement=samplesize-w;
+    long placement_tmp=samplesize-w;
     //cout << "pointeroff=" << placement << endl;
-    if(placement>0) in=samples->data()+placement;
-    else in=samples->data();
+    if(placement_tmp>0) placement=placement_tmp;
+    else placement=0;
 
 }
 void PeriodFinder::calcPeriode()
@@ -155,15 +155,15 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
         const int runningavg=3;
         for(int i=1; i<avgperiode;i++)
         {
-            if((*(samples->data()+samplesize-i)).value<=(*(samples->data()+samplesize-min)).value ) 
+            if(samples->at(samplesize-i).value<=samples->at(samplesize-min).value )
             {
                 float avg=0;
                 for(int j=0;j<runningavg;j++)
                 {
-                    avg+=(*(samples->data()+samplesize-i-j)).value;
+                    avg+=samples->at(samplesize-i-j).value;
                 }
                 avg/=runningavg;
-                if(avg>(*(samples->data()+samplesize-i+1)).value)  min=i;
+                if(avg>samples->at(samplesize-i+1).value)  min=i;
             }
         }
         samplesize-=min;
@@ -180,10 +180,10 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             float average=0;
             for(int j=1; j<=runningavg; j++)
             {
-                average+=(*(samples->data()+samplesize-i-j)).value-(*(samples->data()+samplesize-i-j-1)).value;
+                average+=samples->at(samplesize-i-j).value-samples->at(samplesize-i-j-1).value;
             }
             average/=runningavg;
-            float diff=(*(samples->data()+samplesize-i)).value-(*(samples->data()+samplesize-i-1)).value-average;
+            float diff=samples->at(samplesize-i).value-samples->at(samplesize-i-1).value-average;
             if(diff>biggestchange)
             {
                biggestchange=diff;
@@ -203,7 +203,7 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             RingBuffer<float,5> smoother;
             for(int i=-5;i<avgperiode; i++)
             {
-                smoother.push_back((*(samples->data()+samplesize-i)).value);
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if (smoother.getAvg()<minval) 
@@ -232,7 +232,7 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             float lastval=0;
             for(int i=-5;i<avgperiode; i++)
             {
-                smoother.push_back((*(samples->data()+samplesize-i)).value);
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if(i>=1)
@@ -267,7 +267,7 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             float lastval=0;
             for(int i=-5;i<avgperiode; i++)
             {
-                smoother.push_back((*(samples->data()+samplesize-i)).value);
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if(i>=1)

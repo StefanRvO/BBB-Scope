@@ -7,6 +7,7 @@
 #include <vector>
 #include <unistd.h>
 #include "RingBuffer.h"
+#include "HugeBuffer.h"
 /*
 This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
@@ -22,7 +23,7 @@ class PeriodFinder {
         fftw_plan forward;
         fftw_plan backward;
         Options *options;
-        std::vector<sample> *samples;
+        HugeBuffer<sample,65000000> *samples;
         double *final;
         std::complex<double> *out;
         void fastAutocorrelate();
@@ -30,14 +31,14 @@ class PeriodFinder {
         void calcpointer();
         int size;
         SDL_Window *window;
-        sample *in;
+        long placement;
         std::thread t1;
         int periode;
         RingBuffer<int,AVGSIZE> runningAvgBuf;
         float avgperiode;
         int FindBestLockMode(long samplesize);
     public:
-        PeriodFinder(Options *options_, std::vector<sample> *samples_, SDL_Window *window_);
+        PeriodFinder(Options *options_, HugeBuffer<sample,65000000> *samples_, SDL_Window *window_);
         void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
         int getPeriode();
         void updatePlans(); //update inpointer

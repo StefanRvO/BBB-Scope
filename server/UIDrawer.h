@@ -13,6 +13,7 @@
 #include "TextDrawer.h"
 #include "Timer.h"
 #include "PeriodFinder.h"
+#include "HugeBuffer.h"
 
 class UIDrawer
 {
@@ -21,7 +22,7 @@ class UIDrawer
         SampleGrabber *Grabber;
         SDL_Window *window;
         SDL_Renderer* renderer;
-        std::vector<sample> samples;
+        HugeBuffer<sample,65000000> samples;
         EventHandler *eventHandler;
         Options options;
         Timer timer;

@@ -100,7 +100,7 @@ void UIDrawer::drawUI()
     long index=samplesize-scaledW+options.mouseX/options.zoomX;
     if(index>0 and index<(int)samples.size()-1)
     {
-        drawFilledCircle(renderer,options.mouseX,(4096-samples[index].value)*(scaledH)/4096+options.offsetY,5);
+        drawFilledCircle(renderer,options.mouseX,(4096-samples.at(index).value)*(scaledH)/4096+options.offsetY,5);
         //write out value
     }
     //Draw axes
@@ -112,12 +112,12 @@ void UIDrawer::drawUI()
     txtDraw.DrawText(renderer,(string("Framerate: ")+std::to_string(timer.getAvgFPS())).c_str(),0,0,200,200,40,0); //print framerate
     if(index>0 and index<(int)samples.size()-1)
     {
-        txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples[index].value)).c_str(),0,h/30,200,200,40,0);
-        long long diff=samples[index].time-samples[(int)samples.size()-1].time;
+        txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples.at(index).value)).c_str(),0,h/30,200,200,40,0);
+        long long diff=samples.at(index).time-samples.at((int)samples.size()-1).time;
         txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
         if(options.paused)
         {
-            diff=samples[index].time-samples[options.pausedSamplesize-1].time;
+            diff=samples.at(index).time-samples.at(options.pausedSamplesize-1).time;
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
         }
     }
@@ -130,14 +130,14 @@ void UIDrawer::drawUI()
         int previndexpoint=5;
         while(diff<1000000 and indexpoint<(int)samples.size())
         {
-            diff=samples[(int)samples.size()-1].time-samples[(int)samples.size()-indexpoint-1].time;
+            diff=samples.at((int)samples.size()-1).time-samples.at((int)samples.size()-indexpoint-1).time;
             previndexpoint=indexpoint;
             indexpoint=indexpoint*1.3+5;
         }
-        cout << previndexpoint << "\t" << diff << endl;
+        //cout << previndexpoint << "\t" << diff << endl;
         float rate=previndexpoint/(double) diff;
         rate*=1000000; //get Hz istead of Mhz
-        cout << rate << endl;
+        //cout << rate << endl;
         txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     }
         txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
@@ -191,8 +191,7 @@ void UIDrawer::drawSamples()
     {
         if(samplesize-i<0) continue;
         //SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
-        thickLineRGBA (renderer, (w-i)*options.zoomX,((4096-samples[samplesize-i].value)*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1].value)*h/4096)+options.offsetY,
+        thickLineRGBA (renderer, (w-i)*options.zoomX,((4096-samples.at(samplesize-i).value)*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY,
             1, 255,0,0,255);
-            cout << w-i << endl;
     }
 }

@@ -9,6 +9,7 @@
 #pragma once
 #include <stdexcept>
 #include <exception>
+#include <cstdlib>
 #include <sys/time.h>
 #include <mutex>
 #include <vector>
@@ -45,17 +46,17 @@ class HugeBuffer
         bool stop=false;
         FILE *filebuff;
         std::thread memoryHandlerThread;
-        
+        void loadBlock(long index);
         T bufferPool(long index);
     public:
         HugeBuffer( std::string filename);
+        HugeBuffer();
         ~HugeBuffer();
         void push_back(T element);
         size_t size(); //get elementcount in buffer
         
         //This is where the magic happens
         T at(long index); //get element at index
-        void loadBlock(long index);
         void memoryHandler();
 
 };
