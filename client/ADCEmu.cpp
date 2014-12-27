@@ -62,8 +62,9 @@ int main(int argc, char *argv[])
         //cursample.value=v*2048+rand()%200-100;
         //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%200-100;
         //if(v>1) cursample.value=(2-v)*2048+rand()%200-100;
-        cursample.value=sin((cursample.tv.tv_sec*1000.+cursample.tv.tv_usec/1000.)*0.1)*1500;
-        t.highPresisionTick();
+        v+=0.01;
+        cursample.value=sin(v)*1500;
+        //t.highPresisionTick();
         //else cursample.value=(sin(v)+sin(v*2)+sin(v*3))*1500/3-1000;
         //else
         //cursample.value=v*2048+rand()%200-100;
