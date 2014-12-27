@@ -16,6 +16,6 @@ struct Options
 };
 struct sample
 {
-    short value;
-    timeval tv;
+    double value;
+    int64_t time; //time in ms
 };

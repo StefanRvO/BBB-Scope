@@ -21,8 +21,7 @@ class UIDrawer
         SampleGrabber *Grabber;
         SDL_Window *window;
         SDL_Renderer* renderer;
-        std::vector<double> samples;
-        std::vector<unsigned long long> times;
+        std::vector<sample> samples;
         EventHandler *eventHandler;
         Options options;
         Timer timer;

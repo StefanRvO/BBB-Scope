@@ -10,11 +10,10 @@ class EventHandler
         SDL_Window *window;
         SDL_Renderer* renderer;
         Options *options;
-        std::vector<unsigned long long> *times;
-        std::vector<double> *samples;
+        std::vector<sample> *samples;
         PeriodFinder *pFinder;
     public:
-        EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_,std::vector<double> &samples_, std::vector<unsigned long long> &times_,PeriodFinder *pFinder );
+        EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_,std::vector<sample> *samples_,PeriodFinder *pFinder );
         void handleEvents();
         void stateHandler();
     private:

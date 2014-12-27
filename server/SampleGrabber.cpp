@@ -58,8 +58,8 @@ void SampleGrabber::run()
             pointeroffset=(pointeroffset+num)%sizeof(cursample);
             if(pointeroffset==0)
             {
-            tBuffer.push_back(cursample.tv.tv_sec*1000000+cursample.tv.tv_usec);
-            sBuffer.push_back(cursample.value+2048);
+                cursample.value+=2048;
+                sBuffer.push_back(cursample);
             }
         }
     }

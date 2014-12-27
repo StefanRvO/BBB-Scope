@@ -22,7 +22,7 @@ class PeriodFinder {
         fftw_plan forward;
         fftw_plan backward;
         Options *options;
-        std::vector<double> *samples;
+        std::vector<sample> *samples;
         double *final;
         std::complex<double> *out;
         void fastAutocorrelate();
@@ -30,14 +30,14 @@ class PeriodFinder {
         void calcpointer();
         int size;
         SDL_Window *window;
-        double *in;
+        sample *in;
         std::thread t1;
         int periode;
         RingBuffer<int,AVGSIZE> runningAvgBuf;
         float avgperiode;
         int FindBestLockMode(long samplesize);
     public:
-        PeriodFinder(Options *options_, std::vector<double> *samples_, SDL_Window *window_);
+        PeriodFinder(Options *options_, std::vector<sample> *samples_, SDL_Window *window_);
         void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
         int getPeriode();
         void updatePlans(); //update inpointer

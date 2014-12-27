@@ -1,12 +1,11 @@
 #include "EventHandler.h"
 #include <iostream>
-EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, std::vector<double> &samples_, std::vector<unsigned long long> &times_,PeriodFinder *pFinder_)
+EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, std::vector<sample> *samples_,PeriodFinder *pFinder_)
 {
     window=window_;
     renderer=renderer_;
     options=options_;
-    samples=&samples_;
-    times=&times_;
+    samples=samples_;
     pFinder=pFinder_;
 }
 void EventHandler::stateHandler()

@@ -24,7 +24,10 @@ class RingBuffer
             ioTotal=0;
             cap=_size;
         }
-        
+        T at(size_t index) //return (reference to) element at index
+        {
+            return *(Buffer->data()+(TAIL+index)%capacity());
+        }
         size_t size()
         {
             return ioTotal;
@@ -34,7 +37,14 @@ class RingBuffer
         {
             return cap;
         }
-
+        void eraseElements(long count) //erase this amount of elements from buffer
+        {
+            lock.lock();
+            if (count>ioTotal) count=ioTotal;
+            TAIL=(TAIL+count)%capacity();
+            ioTotal-=count;
+            lock.unlock();
+        }
         bool empty()
         {
             return ioTotal==0;
