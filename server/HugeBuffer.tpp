@@ -184,6 +184,7 @@ void HugeBuffer<T,_size>::memoryHandler()
         gettimeofday(&tv,NULL);
         for(int i=0; i<tmpAllocks.size();i++)
         {
+            std::cout << (long long)tmpAllocks[i].lastAccess.tv_sec*1000000+tmpAllocks[i].lastAccess.tv_usec << " " << tmpAllocks[i].startindex << " " << tmpAllocks[i].endindex  <<std::endl;
             if((long long)tv.tv_sec*1000000+tv.tv_usec-HBUFFER_TOUT>(long long)tmpAllocks[i].lastAccess.tv_sec*1000000+tmpAllocks[i].lastAccess.tv_usec)
             {
                 delete[] tmpAllocks[i].memblock;
@@ -191,6 +192,7 @@ void HugeBuffer<T,_size>::memoryHandler()
                 i--;
             }
         }
+        std::cout << std::endl;
         tmpMemMtx.unlock();
         //check if buffer is within 20% of full. if so, fill into file. But do it just rBuffercapacity/1000 peices a time to prevent locking
         if((float)rBuffer.size()/rBuffer.capacity()>0.8)

@@ -66,7 +66,7 @@ int UIDrawer::loop()
         Draw();
         timer.tick();
         Pfinder->finish();
-        cout << samples.tmpAllockSize() << endl;
+        //cout << samples.tmpAllockSize() << endl;
         //cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
     }
     return 0;
