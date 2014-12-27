@@ -59,13 +59,13 @@ int UIDrawer::loop()
     while (options.alive)
     {
         GetNewData();
-        Pfinder->renewPlans();
-        Pfinder->calcPeriode();
+        //Pfinder->renewPlans();
+        //Pfinder->calcPeriode();
         eventHandler->handleEvents();
         eventHandler->stateHandler();
         Draw();
         timer.tick();
-        Pfinder->finish();
+        //Pfinder->finish();
         //cout << samples.tmpAllockSize() << endl;
         //cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
     }
@@ -192,8 +192,11 @@ void UIDrawer::drawSamples()
     for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
         if(samplesize-i<0 ) continue;
-        //SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
-        thickLineRGBA (renderer, (w-i)*options.zoomX,((4096-samples.at(samplesize-i).value)*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY,
-            1, 255,0,0,255);
+        if(samplesize-i+((int)(0.5/options.zoomX))+1>samples.size()) continue;
+        Sint16 x1=(w-i)*options.zoomX;
+        Sint16 y1=(4096-samples.at(samplesize-i).value)*h/4096+options.offsetY;
+        Sint16 x2=(w-i+1)*options.zoomX;
+        Sint16 y2=((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY;
+        thickLineRGBA (renderer, x1, y1, x2, y2, 1, 255,0,0,255);
     }
 }
