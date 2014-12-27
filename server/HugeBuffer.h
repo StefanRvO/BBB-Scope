@@ -44,6 +44,7 @@ class HugeBuffer
         std::mutex fileoutAccess; //mutex for fileout access
         std::mutex fileAccess; //mutex for general file access
         bool stop=false;
+        T *tmpMem;
         FILE *filebuff;
         std::thread memoryHandlerThread;
         void loadBlock(long index);
@@ -54,7 +55,7 @@ class HugeBuffer
         ~HugeBuffer();
         void push_back(T element);
         size_t size(); //get elementcount in buffer
-        
+        long tmpAllockSize();
         //This is where the magic happens
         T at(long index); //get element at index
         void memoryHandler();

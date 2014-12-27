@@ -23,7 +23,7 @@ class PeriodFinder {
         fftw_plan forward;
         fftw_plan backward;
         Options *options;
-        HugeBuffer<sample,65000000> *samples;
+        HugeBuffer<sample,20000000> *samples;
         double *final;
         std::complex<double> *out;
         void fastAutocorrelate();
@@ -38,7 +38,7 @@ class PeriodFinder {
         float avgperiode;
         int FindBestLockMode(long samplesize);
     public:
-        PeriodFinder(Options *options_, HugeBuffer<sample,65000000> *samples_, SDL_Window *window_);
+        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_);
         void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
         int getPeriode();
         void updatePlans(); //update inpointer

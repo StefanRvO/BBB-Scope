@@ -1,7 +1,7 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,65000000> *samples_, SDL_Window *window_)
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_)
 {
     options=options_;
     samples=samples_;
@@ -18,8 +18,8 @@ PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,65000000> *sampl
     out = (complex<double> *) fftw_alloc_complex(size+1);
     
     //create plans
-    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
+    forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     
 }
 void PeriodFinder::findPeriode()
@@ -134,8 +134,8 @@ void PeriodFinder::renewPlans()
     fftw_destroy_plan(backward);
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
-    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
+    forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
     
 }
 long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
@@ -290,11 +290,7 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
     }
     return samplesize;
 }
-void calcPeriodeWrapper(PeriodFinder *finder)
-{
-    finder->findPeriode();
-    finder->done=true;
-}
+
 int PeriodFinder::FindBestLockMode(long samplesize)
 {   //Tries the different lockmodes and find the most stable one.
     long besttotaldiff=99999;
@@ -329,4 +325,10 @@ int PeriodFinder::FindBestLockMode(long samplesize)
         }
     }
     return bestmode;
+}
+
+void calcPeriodeWrapper(PeriodFinder *finder)
+{
+    finder->findPeriode();
+    finder->done=true;
 }

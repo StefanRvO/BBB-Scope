@@ -1,6 +1,6 @@
 #include "EventHandler.h"
 #include <iostream>
-EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, HugeBuffer<sample,65000000> *samples_,PeriodFinder *pFinder_)
+EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, HugeBuffer<sample,20000000> *samples_,PeriodFinder *pFinder_)
 {
     window=window_;
     renderer=renderer_;

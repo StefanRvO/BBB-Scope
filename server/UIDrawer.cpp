@@ -66,6 +66,7 @@ int UIDrawer::loop()
         Draw();
         timer.tick();
         Pfinder->finish();
+        cout << samples.tmpAllockSize() << endl;
         //cout << Pfinder->getRunningAvgPeriode() << "\t" << options.lockmode <<  endl;
     }
     return 0;
@@ -117,7 +118,7 @@ void UIDrawer::drawUI()
         txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
         if(options.paused)
         {
-            diff=samples.at(index).time-samples.at(options.pausedSamplesize-1).time;
+            diff=samples.at(index).time-samples.at(samplesize-1).time;
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
         }
     }
@@ -187,9 +188,10 @@ void UIDrawer::drawSamples()
     /*cout << options.zoomY << " " << h << " " << options.zoomX << " " << w << endl;
     cout << options.offsetY << " " << options.offsetX << endl; */
     //samplesize-=options.offsetX;
+    if(samplesize>samples.size()) return;
     for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
-        if(samplesize-i<0) continue;
+        if(samplesize-i<0 ) continue;
         //SDL_RenderDrawLine(renderer,(w-i)*options.zoomX,((4096-samples[samplesize-i])*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples[samplesize-i+((int)(0.5/options.zoomX))+1])*h/4096)+options.offsetY);
         thickLineRGBA (renderer, (w-i)*options.zoomX,((4096-samples.at(samplesize-i).value)*h/4096)+options.offsetY,(w-i+1)*options.zoomX,((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY,
             1, 255,0,0,255);

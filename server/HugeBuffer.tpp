@@ -6,6 +6,7 @@ HugeBuffer<T,_size>::HugeBuffer(std::string filename_)
     //start memory handler thread
     memoryHandlerThread=std::thread(memoryHandlerWrapper<T,_size>,this);
     filename=filename_;
+    tmpMem=new T[rBuffer.capacity()/1000];
 }
 template <class T,size_t _size>
 HugeBuffer<T,_size>::HugeBuffer()
@@ -17,6 +18,7 @@ HugeBuffer<T,_size>::HugeBuffer()
     filebuff =fopen(filename.c_str(),"wb+"); //open file
     //start memory handler thread
     memoryHandlerThread=std::thread(memoryHandlerWrapper<T,_size>,this);
+    tmpMem=new T[rBuffer.capacity()/1000];
 }
 
 template <class T,size_t _size>
@@ -32,6 +34,7 @@ HugeBuffer<T,_size>::~HugeBuffer()
     fclose(filebuff);
     remove(filename.c_str()); //remove file
     for(TempAlloc<T> &block : tmpAllocks) delete[] block.memblock; //delete tmpallocated stuff
+    delete[] tmpMem;
 }
 
 template <class T,size_t _size>
@@ -53,8 +56,24 @@ template <class T,size_t _size>
 T HugeBuffer<T,_size>::at(long index)
 {
     //Test if element is in loaded buffer
-    if(index<0) throw(std::range_error("negative index not allowed!"));
-    //else if(index>size()) throw(std::range_error("out of bounds!"));
+    if(index<0)
+    {
+        std::string err;
+        err+="Negative index not allowed!\n";
+        err+="Index was: ";
+        err+=std::to_string(index)+"\n";
+        throw(std::range_error(err));
+    }
+    else if(index>size())
+    {
+        std::string err;
+        err+="out of bounds!\n";
+        err+="Index was: ";
+        err+=std::to_string(index);
+        err+="size is: ";
+        err+=std::to_string(size());
+        throw(std::range_error(err));
+    }
     fileAccess.lock(); //this may be problematic
     if(index-filepointer>0)
     {
@@ -140,7 +159,16 @@ void HugeBuffer<T,_size>::loadBlock(long index) //load block into memory pool
     tmpAllocks.insert(tmpAllocks.begin(),block);
     tmpMemMtx.unlock();
 } 
-
+template <class T,size_t _size>
+long HugeBuffer<T,_size>::tmpAllockSize()
+{
+    long sum=0;
+    for(TempAlloc<T> &block : tmpAllocks)
+    {
+        sum+=block.endindex-block.startindex+1;
+    }
+    return sum;
+}
  
 template <class T,size_t _size>  
 void HugeBuffer<T,_size>::memoryHandler()    
@@ -170,24 +198,22 @@ void HugeBuffer<T,_size>::memoryHandler()
             while((float)rBuffer.size()/rBuffer.capacity()>0.7)
             {
                 //allocate memory
-                T *mem=new T[rBuffer.capacity()/1000];
                 //Copy data 
                 for(int i=0;i<rBuffer.capacity()/1000; i++)
                 {
-                    mem[i]=rBuffer.at(i);
+                    tmpMem[i]=rBuffer.at(i);
                 }
                 //write to file
                 fileoutAccess.lock();
                 fileinAccess.lock();
                 fseek(filebuff,0,SEEK_END);
-                fwrite(mem,sizeof(T),rBuffer.capacity()/1000,filebuff);
+                fwrite(tmpMem,sizeof(T),rBuffer.capacity()/1000,filebuff);
                 fileinAccess.unlock();
                 fileoutAccess.unlock();
                 fileAccess.lock();
                 filepointer+=rBuffer.capacity()/1000;
                 rBuffer.eraseElements(rBuffer.capacity()/1000);
                 fileAccess.unlock();
-                delete[] mem;
             }
         }
     }

@@ -22,7 +22,7 @@ class UIDrawer
         SampleGrabber *Grabber;
         SDL_Window *window;
         SDL_Renderer* renderer;
-        HugeBuffer<sample,65000000> samples;
+        HugeBuffer<sample,20000000> samples;
         EventHandler *eventHandler;
         Options options;
         Timer timer;
