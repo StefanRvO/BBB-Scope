@@ -32,7 +32,7 @@ void PeriodFinder::findPeriode()
     }
     for(int i=0;i<size;i++)
     {
-        final[i]=samples->at(i).value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[size-i-1]=samples->at(placement-i-1).value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
     for(int i=size; i<size*2; i++)
     {
@@ -45,6 +45,8 @@ void PeriodFinder::findPeriode()
         //Find largest peak larger than 2
         if((final[first]<final[i] or first==0) and final[i]>final[i-1] and final[i]>final[i-2]) first=i;
     }
+    if(first==0) first=size/2; //if none found, set periode to size/2
+    
     periode = first;
     runningAvgBuf.push_back(periode);
     avgperiode=runningAvgBuf.getAvg()+0.5;
@@ -65,21 +67,22 @@ PeriodFinder::~PeriodFinder()
     fftw_free(out);
     fftw_free(final);
 }
-void PeriodFinder::calcSize() //calculate the number of samples to perform fft on
+void PeriodFinder::calcSize() //calculate the number of samples to perform fft on, normaly about 5*last measured periode
 {
+    auto tmpPeriode=periode;
+    if(tmpPeriode<500) tmpPeriode=500;
+    long tmpSize=tmpPeriode*20;
     long samplesize;
     if(options->paused)
     {
         samplesize=options->pausedSamplesize;
     }
     else samplesize=samples->size();
-    int w,h;
-    SDL_GetWindowSize(window,&w,&h);
-    w/=options->zoomX;
-    if(w<samplesize) size = w;
-    else size = samplesize;
-    size=sqrt(size);
-    size*=size; //limit size to be a square number. Gives generally better results.
+    if(tmpSize>samplesize) tmpSize = samplesize;
+    tmpSize=sqrt(tmpSize);
+    tmpSize*=tmpSize; //limit size to be a square number. Gives generally better results.
+    size=tmpSize;
+    std::cout << size << std::endl;
 }
 void PeriodFinder::calcPlacement()
 {
@@ -97,6 +100,7 @@ void PeriodFinder::calcPlacement()
     //cout << "pointeroff=" << placement << endl;
     if(placement_tmp>0) placement=placement_tmp;
     else placement=0;
+    std::cout << placement << std::endl;
 
 }
 int PeriodFinder::getPeriode()

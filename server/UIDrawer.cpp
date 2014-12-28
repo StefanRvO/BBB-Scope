@@ -204,7 +204,7 @@ void SDL_RenderDrawThickLine(SDL_Renderer* renderer, //crude hack to avoid thick
                        int           width)
 {
     float offset=width/2.;
-    for(float i=-offset; i<=offset; i++)
+    for(float i=-offset; i<offset; i++)
     SDL_RenderDrawLine(renderer, x1+i,y1,x2+i,y2);
 }
 

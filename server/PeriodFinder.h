@@ -30,7 +30,7 @@ class PeriodFinder {
         void fastAutocorrelate();
         void calcSize();
         void calcPlacement();
-        long size;
+        long size=0;
         SDL_Window *window;
         long placement;
         std::thread t1;
