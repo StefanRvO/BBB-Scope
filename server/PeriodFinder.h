@@ -8,15 +8,16 @@
 #include <unistd.h>
 #include "RingBuffer.h"
 #include "HugeBuffer.h"
+#include "Timer.h"
 /*
 This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
 The autocorrelation is performed by a fft and a inverse fft
-This is probably too slow to run on each frame update.
-Later versions is partly inspired by 
-https://stackoverflow.com/questions/4225432/how-to-compute-frequency-of-data-using-fft
+This is probably too slow to run on each frame update, so it just runs independetly.
+
 */
-#define AVGSIZE 15 
+#define AVGSIZE 5
+#define UPDATERATE 10 //How many times a second the periodelenght is calculated.
 class PeriodFinder {
 
     private:
@@ -27,28 +28,26 @@ class PeriodFinder {
         double *final;
         std::complex<double> *out;
         void fastAutocorrelate();
-        void calcsize();
-        void calcpointer();
-        int size;
+        void calcSize();
+        void calcPlacement();
+        long size;
         SDL_Window *window;
         long placement;
         std::thread t1;
         int periode;
         RingBuffer<int,AVGSIZE> runningAvgBuf;
+        Timer t;
         float avgperiode;
         int FindBestLockMode(long samplesize);
+        void renewPlans(); //make new plans (eg. if the display has been resized)
+        void findPeriode();
+        bool stop=false;
     public:
         PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_);
-        void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
         int getPeriode();
-        void updatePlans(); //update inpointer
-        void renewPlans(); //make new plans (eg. if the display has been resized)
         ~PeriodFinder();
-        void findPeriode();
         int getRunningAvgPeriode();
-        void finish();
-        bool isDone();
-        bool done;
         long findSamplesize(long samplesize,int mode);
+        void calcPeriodeThread();
 };
 void calcPeriodeWrapper(PeriodFinder *finder);

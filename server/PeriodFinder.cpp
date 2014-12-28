@@ -1,7 +1,7 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_)
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_): t(Timer(UPDATERATE))
 {
     options=options_;
     samples=samples_;
@@ -10,17 +10,17 @@ PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *sampl
     //Enable threading
     fftw_init_threads();
     fftw_plan_with_nthreads(3);
-    
+    for(int i=0;i<AVGSIZE; i++) runningAvgBuf.push_back(0);
     //Alocate memory
-    calcsize();
-    calcpointer();
+    calcSize();
+    calcPlacement();
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
     
     //create plans
     forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
     backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
-    
+    t1=thread(calcPeriodeWrapper,this);
 }
 void PeriodFinder::findPeriode()
 {
@@ -58,12 +58,14 @@ void PeriodFinder::fastAutocorrelate()
 
 PeriodFinder::~PeriodFinder()
 {
+    stop=true;
+    t1.join();
     fftw_destroy_plan(forward);
     fftw_destroy_plan(backward);
     fftw_free(out);
     fftw_free(final);
 }
-void PeriodFinder::calcsize() //return the number of samples to perform fft on
+void PeriodFinder::calcSize() //calculate the number of samples to perform fft on
 {
     long samplesize;
     if(options->paused)
@@ -74,14 +76,12 @@ void PeriodFinder::calcsize() //return the number of samples to perform fft on
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
     w/=options->zoomX;
-    //samplesize-=options->offsetX; //why are we doing this?
     if(w<samplesize) size = w;
     else size = samplesize;
-    /*size=sqrt(size);
-    size*=size;*/
-    //if(getRunningAvgPeriode()==200) cout << options->zoomX << " " << size << endl;
+    size=sqrt(size);
+    size*=size; //limit size to be a square number. Gives generally better results.
 }
-void PeriodFinder::calcpointer()
+void PeriodFinder::calcPlacement()
 {
     long samplesize;
     if(options->paused)
@@ -99,19 +99,6 @@ void PeriodFinder::calcpointer()
     else placement=0;
 
 }
-void PeriodFinder::calcPeriode()
-{
-     done=false;
-     t1=thread(calcPeriodeWrapper,this);
-}
-void PeriodFinder::finish()
-{
-    t1.join();
-}
-bool PeriodFinder::isDone()
-{
-    return done;
-}
 int PeriodFinder::getPeriode()
 {
     return periode;
@@ -120,14 +107,12 @@ int PeriodFinder::getRunningAvgPeriode()
 {
     return avgperiode;
 }
-void PeriodFinder::updatePlans()
-{
-    calcpointer();
-}
 void PeriodFinder::renewPlans()
 {
-    calcpointer();
-    calcsize();
+    calcPlacement();
+    auto tmpSize=size;
+    calcSize();
+    if(size==tmpSize) return; //don't renew plans if nothing changed.
     fftw_free(out);
     fftw_free(final);
     fftw_destroy_plan(forward);
@@ -136,7 +121,6 @@ void PeriodFinder::renewPlans()
     out = (complex<double> *) fftw_alloc_complex(size+1);
     forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
     backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
-    
 }
 long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
 {
@@ -326,9 +310,16 @@ int PeriodFinder::FindBestLockMode(long samplesize)
     }
     return bestmode;
 }
-
-void calcPeriodeWrapper(PeriodFinder *finder)
+void PeriodFinder::calcPeriodeThread()
 {
-    finder->findPeriode();
-    finder->done=true;
+    while(!stop)
+    {
+        t.tick();
+        renewPlans();
+        findPeriode();
+    }
+}
+void calcPeriodeWrapper(PeriodFinder *finder)
+{ 
+    finder->calcPeriodeThread();
 }

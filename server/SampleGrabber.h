@@ -23,6 +23,7 @@ class SampleGrabber
         int socket_fd, client_fd,num;
         socklen_t size;
         std::thread t1;
+        bool stop=false;
   
     public:
         RingBuffer<sample,10000000> sBuffer;
