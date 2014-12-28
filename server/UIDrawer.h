@@ -37,3 +37,9 @@ class UIDrawer
         void GetNewData();
         void Draw();
 };
+void SDL_RenderDrawThickLine(SDL_Renderer* renderer,
+                       int           x1,
+                       int           y1,
+                       int           x2,
+                       int           y2,
+                       int           width);

@@ -184,14 +184,27 @@ void UIDrawer::drawSamples()
     cout << options.offsetY << " " << options.offsetX << endl; */
     //samplesize-=options.offsetX;
     if(samplesize>samples.size()) return;
-    for(; i > 1; i-=((int)(1./options.zoomX))+1)
+    for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
     {
         if(samplesize-i<0 ) continue;
-        if(samplesize-i+((int)(1./options.zoomX))+1>samples.size()) continue;
+        if(samplesize-i+((int)(0.5/options.zoomX))+1>samples.size()) continue;
         Sint16 x1=(w-i)*options.zoomX;
         Sint16 y1=(4096-samples.at(samplesize-i).value)*h/4096+options.offsetY;
         Sint16 x2=(w-i+1)*options.zoomX;
-        Sint16 y2=((4096-samples.at(samplesize-i+((int)(1./options.zoomX))+1).value)*h/4096)+options.offsetY;
-        thickLineRGBA (renderer, x1, y1, x2, y2, 1, 255,0,0,255);
+        Sint16 y2=((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY;
+        //thickLineRGBA (renderer, x1, y1, x2, y2, 1, 255,0,0,255);
+        SDL_RenderDrawThickLine(renderer, x1,y1,x2,y2,2);
     }
 }
+void SDL_RenderDrawThickLine(SDL_Renderer* renderer, //crude hack to avoid thickLineRGBA
+                       int           x1,
+                       int           y1,
+                       int           x2,
+                       int           y2,
+                       int           width)
+{
+    float offset=width/2.;
+    for(float i=-offset; i<=offset; i++)
+    SDL_RenderDrawLine(renderer, x1+i,y1,x2+i,y2);
+}
+
