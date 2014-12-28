@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <vector>
+#include <limits>
 #include "structures.h"
 #include "Primitives.h"
 #include "PeriodFinder.h"

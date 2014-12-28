@@ -61,7 +61,7 @@ void EventHandler::stateHandler()
     }
     if(options->offsetX<(long long)options->pausedSamplesize-(long long)samples->size() and options->paused)
     {
-        std::cout << (long long)options->pausedSamplesize-(long long)samples->size() << std::endl;
+        //std::cout << (long long)options->pausedSamplesize-(long long)samples->size() << std::endl;
         options->offsetX=(long long)options->pausedSamplesize-(long long)samples->size();
     }
     else if(options->offsetX<0 and !options->paused)
@@ -129,7 +129,15 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_A)
     {
-        options->lockmode=0;
+        options->lockmode=0; //set lockmode to auto
+        //calculate zoomlevel to show 5 periodes on screen
+        int w,h;
+        SDL_GetWindowSize(window,&w,&h);
+        std::cout << options->zoomX << std::endl;
+        double zoom= ((double)w)/(5*pFinder->getRunningAvgPeriode());
+        if(zoom==0 or zoom==std::numeric_limits<double>::infinity()) zoom=options->zoomX;
+        options->offsetX=0;
+        options->zoomX=zoom;
     }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)

@@ -40,10 +40,20 @@ void PeriodFinder::findPeriode()
     }
     fastAutocorrelate();
     long first=0;
-    for (long i=2; i< size/3; i++)
+    for (long i=10; i< size/3; i++)
     {
-        //Find largest peak larger than 2
-        if((final[first]<final[i] or first==0) and final[i]>final[i-1] and final[i]>final[i-2]) first=i;
+        //Find largest peak larger than 5
+        if((final[first]<final[i] or first==0) 
+        and final[i]>final[i-1] 
+        and final[i]>final[i-2] 
+        and final[i]>final[i-3] 
+        and final[i]>final[i-4] 
+        and final[i]>final[i-5]
+        and final[i]>final[i-6] 
+        and final[i]>final[i-7] 
+        and final[i]>final[i-8] 
+        and final[i]>final[i-9] 
+        and final[i]>final[i-10]) first=i;
     }
     if(first==0) first=size/2; //if none found, set periode to size/2
     
@@ -82,7 +92,7 @@ void PeriodFinder::calcSize() //calculate the number of samples to perform fft o
     tmpSize=sqrt(tmpSize);
     tmpSize*=tmpSize; //limit size to be a square number. Gives generally better results.
     size=tmpSize;
-    std::cout << size << std::endl;
+    //std::cout << size << std::endl;
 }
 void PeriodFinder::calcPlacement()
 {
@@ -100,7 +110,7 @@ void PeriodFinder::calcPlacement()
     //cout << "pointeroff=" << placement << endl;
     if(placement_tmp>0) placement=placement_tmp;
     else placement=size;
-    std::cout << placement << std::endl;
+    //std::cout << placement << std::endl;
 
 }
 int PeriodFinder::getPeriode()
