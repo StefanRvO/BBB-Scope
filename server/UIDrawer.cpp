@@ -143,18 +143,12 @@ void UIDrawer::drawUI()
                 txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
                 break;
             case 1:
-                txtDraw.DrawText(renderer,"Lockmode: Minlock",0,6*h/30,200,200,40,0);
-                break;
-            case 2:
-                txtDraw.DrawText(renderer,"Lockmode: Steplock",0,6*h/30,200,200,40,0);
-                break;
-            case 3:
                 txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,6*h/30,200,200,40,0);
                 break;
-            case 4:
+            case 2:
                 txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,6*h/30,200,200,40,0);
                 break;
-            case 5:
+            case 3:
                 txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,6*h/30,200,200,40,0);
                 break;
         }
@@ -175,7 +169,7 @@ void UIDrawer::drawSamples()
     else 
     {   //try to fit to signal so the signal locks in place
         samplesize=(long)samples.size()-(options.offsetX);
-        samplesize=Pfinder->findSamplesize(samplesize,options.lockmode);
+        samplesize=Pfinder->findSamplesize(samplesize,options.lockmode, Pfinder->getRunningAvgPeriode());
     }
     int i=w;
     if(samplesize-1 < w) i=samplesize-1;

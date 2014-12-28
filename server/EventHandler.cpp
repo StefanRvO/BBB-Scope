@@ -120,12 +120,12 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     {
         if(not (event.key.keysym.mod==KMOD_LCTRL))
         options->paused^=1;
-        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode)+options->offsetX;
+        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode,pFinder->getRunningAvgPeriode())+options->offsetX;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_M)
     {
         options->lockmode++;
-        if(options->lockmode>5) options->lockmode=1;
+        if(options->lockmode>3) options->lockmode=1;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_A)
     {

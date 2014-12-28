@@ -18,6 +18,7 @@ This is probably too slow to run on each frame update, so it just runs independe
 */
 #define AVGSIZE 5
 #define UPDATERATE 10 //How many times a second the periodelenght is calculated.
+#define FSAMPLESIZEACC 3000 //accuracy of findsamplesize
 class PeriodFinder {
 
     private:
@@ -38,7 +39,7 @@ class PeriodFinder {
         RingBuffer<int,AVGSIZE> runningAvgBuf;
         Timer t;
         float avgperiode;
-        int FindBestLockMode(long samplesize);
+        int FindBestLockMode(long samplesize, int periode);
         void renewPlans(); //make new plans (eg. if the display has been resized)
         void findPeriode();
         bool stop=false;
@@ -47,7 +48,7 @@ class PeriodFinder {
         int getPeriode();
         ~PeriodFinder();
         int getRunningAvgPeriode();
-        long findSamplesize(long samplesize,int mode);
+        long findSamplesize(long samplesize,int mode, int periode);
         void calcPeriodeThread();
 };
 void calcPeriodeWrapper(PeriodFinder *finder);
