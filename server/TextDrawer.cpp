@@ -22,4 +22,5 @@ void TextDrawer::DrawText(SDL_Renderer *render,const char* text,int x,int y,int 
     SDL_Texture *textTexture=SDL_CreateTextureFromSurface(render, textSurface);
     SDL_RenderCopy(render,textTexture, NULL, &rect);
     SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
 }

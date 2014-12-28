@@ -34,7 +34,7 @@ SampleGrabber::SampleGrabber(int port)
 void SampleGrabber::run()
 {
     int pointeroffset=0;
-    while(true)
+    while(!stop)
     {
         size = sizeof(struct sockaddr_in);  
         if ((client_fd = accept(socket_fd, (struct sockaddr *)&dest, &size))==-1) 
@@ -43,7 +43,7 @@ void SampleGrabber::run()
             exit(1);
         }
          printf("Server got connection from client %s\n", inet_ntoa(dest.sin_addr));
-        while(true) 
+        while(!stop) 
         {
             if ((num = read(client_fd, ((char *)&cursample)+pointeroffset, sizeof(cursample)-pointeroffset))== -1) 
             {
@@ -58,14 +58,15 @@ void SampleGrabber::run()
             pointeroffset=(pointeroffset+num)%sizeof(cursample);
             if(pointeroffset==0)
             {
-            tBuffer.push_back(cursample.tv.tv_sec*1000000+cursample.tv.tv_usec);
-            sBuffer.push_back(cursample.value+2048);
+                cursample.value+=2048;
+                sBuffer.push_back(cursample);
             }
         }
     }
 }
 SampleGrabber::~SampleGrabber()
 {
+    stop=true;
     close(client_fd);   
     close(socket_fd);   
 }

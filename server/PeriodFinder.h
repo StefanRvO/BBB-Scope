@@ -7,47 +7,48 @@
 #include <vector>
 #include <unistd.h>
 #include "RingBuffer.h"
+#include "HugeBuffer.h"
+#include "Timer.h"
 /*
 This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
 The autocorrelation is performed by a fft and a inverse fft
-This is probably too slow to run on each frame update.
-Later versions is partly inspired by 
-https://stackoverflow.com/questions/4225432/how-to-compute-frequency-of-data-using-fft
+This is probably too slow to run on each frame update, so it just runs independetly.
+
 */
-#define AVGSIZE 15 
+#define AVGSIZE 5
+#define UPDATERATE 10 //How many times a second the periodelenght is calculated.
+#define FSAMPLESIZEACC 3000 //accuracy of findsamplesize
 class PeriodFinder {
 
     private:
         fftw_plan forward;
         fftw_plan backward;
         Options *options;
-        std::vector<double> *samples;
+        HugeBuffer<sample,20000000> *samples;
         double *final;
         std::complex<double> *out;
         void fastAutocorrelate();
-        void calcsize();
-        void calcpointer();
-        int size;
+        void calcSize();
+        void calcPlacement();
+        long size=0;
         SDL_Window *window;
-        double *in;
+        long placement;
         std::thread t1;
         int periode;
         RingBuffer<int,AVGSIZE> runningAvgBuf;
+        Timer t;
         float avgperiode;
-        int FindBestLockMode(long samplesize);
-    public:
-        PeriodFinder(Options *options_, std::vector<double> *samples_, SDL_Window *window_);
-        void calcPeriode(); //gets the periode. Uses threading and is nonblocking, done is set to 1 when finished
-        int getPeriode();
-        void updatePlans(); //update inpointer
+        int FindBestLockMode(long samplesize, int periode);
         void renewPlans(); //make new plans (eg. if the display has been resized)
-        ~PeriodFinder();
         void findPeriode();
+        bool stop=false;
+    public:
+        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_);
+        int getPeriode();
+        ~PeriodFinder();
         int getRunningAvgPeriode();
-        void finish();
-        bool isDone();
-        bool done;
-        long findSamplesize(long samplesize,int mode);
+        long findSamplesize(long samplesize,int mode, int periode);
+        void calcPeriodeThread();
 };
 void calcPeriodeWrapper(PeriodFinder *finder);

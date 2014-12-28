@@ -16,6 +16,7 @@ class Timer
         gettimeofday(&last,NULL);
         gettimeofday(&slast,NULL);
         buf=new RingBuffer<float,AVGLENGHT>;
+        for(int i=0;i<AVGLENGHT; i++) buf->push_back(0);
     }
     void tick()
     {
@@ -30,6 +31,11 @@ class Timer
         }
         slast=last;
         last=tv;
+        long long lastT=last.tv_sec*1000000+last.tv_usec;
+        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
+        long diff=lastT-slastT;
+        float fps=(float)(1000000./diff);
+        buf->push_back(fps);
     }
     void presisionTick() //use more cpu while waiting
     {
@@ -45,6 +51,11 @@ class Timer
         }
         slast=last;
         last=tv;
+        long long lastT=last.tv_sec*1000000+last.tv_usec;
+        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
+        long diff=lastT-slastT;
+        float fps=(float)(1000000./diff);
+        buf->push_back(fps);
     }
     
     void highPresisionTick() //use 100% cpu while waiting
@@ -60,6 +71,11 @@ class Timer
         }
         slast=last;
         last=tv;
+        long long lastT=last.tv_sec*1000000+last.tv_usec;
+        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
+        long diff=lastT-slastT;
+        float fps=(float)(1000000./diff);
+        buf->push_back(fps);
     }
     void setFPS(int fps)
     {
@@ -67,20 +83,10 @@ class Timer
     }
     int getFPS()
     {
-        long long lastT=last.tv_sec*1000000+last.tv_usec;
-        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
-        long diff=lastT-slastT;
-        float fps=(float)(1000000./diff);
-        buf->push_back(fps);
-        return (int)(fps+0.5);
+        return buf->at(AVGLENGHT-1);
     }
     int getAvgFPS()
     {
-        long long lastT=last.tv_sec*1000000+last.tv_usec;
-        long long slastT=slast.tv_sec*1000000+slast.tv_usec;
-        long diff=lastT-slastT;
-        float fps=(float)(1000000./diff);
-        buf->push_back(fps);
         return buf->getAvg();
     }
 

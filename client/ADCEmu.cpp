@@ -21,7 +21,8 @@
 
 int main(int argc, char *argv[])
 {
-    Timer t(100);
+    timeval tv;
+    Timer t(10000);
     srand(time(NULL));
     struct sockaddr_in server_info;
     struct hostent *he;
@@ -57,19 +58,22 @@ int main(int argc, char *argv[])
     double v=0;
     int size;
     while(1) {
-        gettimeofday(&cursample.tv,NULL);
+        gettimeofday(&tv,NULL);
+        cursample.time=tv.tv_sec*1000000+tv.tv_usec;
+        v+=0.00001;
         //fgets(buffer,MAXSIZE-1,stdin);
         //cursample.value=v*2048+rand()%200-100;
         //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%200-100;
-        //if(v>1) cursample.value=(2-v)*2048+rand()%200-100;
-        v+=0.01;
-        cursample.value=sin(v)*1500;
+        if(v>1) cursample.value=(2-v)*3000;
+        //cursample.value=sin(v   )*1500;
         //t.highPresisionTick();
-        //else cursample.value=(sin(v)+sin(v*2)+sin(v*3))*1500/3-1000;
+        else cursample.value=v*2000;
+        
+        if(v>2) v=0;
         //else
         //cursample.value=v*2048+rand()%200-100;
         //if(v>2) v=0;
-        if (size=write(socket_fd,&cursample, sizeof(cursample))== -1) {
+        if ((size=write(socket_fd,&cursample, sizeof(cursample))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_fd);
             exit(1);

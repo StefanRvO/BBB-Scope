@@ -1,7 +1,7 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, vector<double> *samples_, SDL_Window *window_)
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_): t(Timer(UPDATERATE))
 {
     options=options_;
     samples=samples_;
@@ -10,21 +10,21 @@ PeriodFinder::PeriodFinder(Options *options_, vector<double> *samples_, SDL_Wind
     //Enable threading
     fftw_init_threads();
     fftw_plan_with_nthreads(3);
-    
+    for(int i=0;i<AVGSIZE; i++) runningAvgBuf.push_back(0);
     //Alocate memory
-    calcsize();
-    calcpointer();
+    calcSize();
+    calcPlacement();
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
     
     //create plans
-    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
-    
+    forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
+    t1=thread(calcPeriodeWrapper,this);
 }
 void PeriodFinder::findPeriode()
 {
-    if(size==0)
+    if(size==0 or placement<size)
     {
         periode=0;
         runningAvgBuf.push_back(periode);
@@ -32,7 +32,7 @@ void PeriodFinder::findPeriode()
     }
     for(int i=0;i<size;i++)
     {
-        final[i]=in[i]*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[size-i-1]=samples->at(placement-i).value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
     for(int i=size; i<size*2; i++)
     {
@@ -45,6 +45,8 @@ void PeriodFinder::findPeriode()
         //Find largest peak larger than 2
         if((final[first]<final[i] or first==0) and final[i]>final[i-1] and final[i]>final[i-2]) first=i;
     }
+    if(first==0) first=size/2; //if none found, set periode to size/2
+    
     periode = first;
     runningAvgBuf.push_back(periode);
     avgperiode=runningAvgBuf.getAvg()+0.5;
@@ -58,30 +60,31 @@ void PeriodFinder::fastAutocorrelate()
 
 PeriodFinder::~PeriodFinder()
 {
+    stop=true;
+    t1.join();
     fftw_destroy_plan(forward);
     fftw_destroy_plan(backward);
     fftw_free(out);
     fftw_free(final);
 }
-void PeriodFinder::calcsize() //return the number of samples to perform fft on
+void PeriodFinder::calcSize() //calculate the number of samples to perform fft on, normaly about 5*last measured periode
 {
+    auto tmpPeriode=periode;
+    if(tmpPeriode<500) tmpPeriode=500;
+    long tmpSize=tmpPeriode*20;
     long samplesize;
     if(options->paused)
     {
         samplesize=options->pausedSamplesize;
     }
     else samplesize=samples->size();
-    int w,h;
-    SDL_GetWindowSize(window,&w,&h);
-    w/=options->zoomX;
-    //samplesize-=options->offsetX; //why are we doing this?
-    if(w<samplesize) size = w;
-    else size = samplesize;
-    /*size=sqrt(size);
-    size*=size;*/
-    //if(getRunningAvgPeriode()==200) cout << options->zoomX << " " << size << endl;
+    if(tmpSize>samplesize) tmpSize = samplesize;
+    tmpSize=sqrt(tmpSize);
+    tmpSize*=tmpSize; //limit size to be a square number. Gives generally better results.
+    size=tmpSize;
+    std::cout << size << std::endl;
 }
-void PeriodFinder::calcpointer()
+void PeriodFinder::calcPlacement()
 {
     long samplesize;
     if(options->paused)
@@ -93,24 +96,12 @@ void PeriodFinder::calcpointer()
     SDL_GetWindowSize(window,&w,&h);
     w/=options->zoomX;
     samplesize-=options->offsetX;
-    long placement=samplesize-w;
+    long placement_tmp=samplesize-w;
     //cout << "pointeroff=" << placement << endl;
-    if(placement>0) in=samples->data()+placement;
-    else in=samples->data();
+    if(placement_tmp>0) placement=placement_tmp;
+    else placement=size;
+    std::cout << placement << std::endl;
 
-}
-void PeriodFinder::calcPeriode()
-{
-     done=false;
-     t1=thread(calcPeriodeWrapper,this);
-}
-void PeriodFinder::finish()
-{
-    t1.join();
-}
-bool PeriodFinder::isDone()
-{
-    return done;
 }
 int PeriodFinder::getPeriode()
 {
@@ -120,95 +111,54 @@ int PeriodFinder::getRunningAvgPeriode()
 {
     return avgperiode;
 }
-void PeriodFinder::updatePlans()
-{
-    calcpointer();
-}
 void PeriodFinder::renewPlans()
 {
-    calcpointer();
-    calcsize();
+    calcPlacement();
+    auto tmpSize=size;
+    calcSize();
+    if(size==tmpSize) return; //don't renew plans if nothing changed.
     fftw_free(out);
     fftw_free(final);
     fftw_destroy_plan(forward);
     fftw_destroy_plan(backward);
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
-    forward=fftw_plan_dft_r2c_1d(size, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
-    
+    forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
 }
-long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
+long PeriodFinder::findSamplesize(long samplesize,int mode, int periode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
 {
+    if (periode==0) return samplesize;
+    int stepsize=periode/FSAMPLESIZEACC;
+    //stepsize=1;
+    if (stepsize==0) stepsize=1;
     //This code is not safe. May read out of bounds TOFIX
     if(mode==0)
     {
         //search for best lockmode
-        options->lockmode=FindBestLockMode(samplesize);
+        options->lockmode=FindBestLockMode(samplesize,periode);
         mode=options->lockmode;
     }
-    if(mode==1) //minlock
-    {
-        //Find the min of the signal in a range backward of periode. 
-        //The min+1 have to be bigger than avg of last x samples
-        int min=0;
-        const int runningavg=3;
-        for(int i=1; i<avgperiode;i++)
-        {
-            if(*(samples->data()+samplesize-i)<=*(samples->data()+samplesize-min) ) 
-            {
-                float avg=0;
-                for(int j=0;j<runningavg;j++)
-                {
-                    avg+=*(samples->data()+samplesize-i-j);
-                }
-                avg/=runningavg;
-                if(avg>*(samples->data()+samplesize-i+1))  min=i;
-            }
-        }
-        samplesize-=min;
-    }
-    else if(mode==2) //steplock
-    {
-    //Find the biggest (positive) change in the periode relative
-    //to the average change of the last x samples
-        const int runningavg=5;
-        float biggestchange=0;
-        int biggestchangeindex=0;
-        for(int i=1; i<avgperiode; i++)
-        {
-            float average=0;
-            for(int j=1; j<=runningavg; j++)
-            {
-                average+=*(samples->data()+samplesize-i-j)-*(samples->data()+samplesize-i-j-1);
-            }
-            average/=runningavg;
-            float diff=*(samples->data()+samplesize-i)-*(samples->data()+samplesize-i-1)-average;
-            if(diff>biggestchange)
-            {
-               biggestchange=diff;
-               biggestchangeindex=i;
-            }
-        }
-        samplesize-=biggestchangeindex;
-    }
-    else if(mode==3) //minlock, smooth
+    if(mode==1) //minlock, smooth
     {
         //Smoth the wave before analysing. Find min.
-        if(samples->size()>5 and samplesize>5)
+        long tsamplesize=samplesize;
+        while(samplesize+5*stepsize>samples->size()) samplesize-=periode;
+        while(samplesize-periode<0) samplesize+=periode;
+        if(samplesize+5*stepsize<=samples->size())
         {
             samplesize-=5;
             int min=0;
             float minval=99999;
             RingBuffer<float,5> smoother;
-            for(int i=-5;i<avgperiode; i++)
+            for(int i=-5*stepsize;i<periode; i+=stepsize)
             {
-                smoother.push_back(*(samples->data()+samplesize-i));
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if (smoother.getAvg()<minval) 
                     {
-                        min=i+3;
+                        min=i+3*stepsize;
                         minval=smoother.getAvg();
                     }
                 
@@ -217,12 +167,16 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             }
             samplesize-=min;
         }
+        else samplesize=tsamplesize;
     }
-    else if(mode==4)
+    else if(mode==2)
     {
          //Find the biggest (positive) change in the periode relative to the average change of the last x samples, but smooth first
          
-        if(samples->size()>5 and samplesize>5)
+        long tsamplesize=samplesize;
+        while(samplesize+5*stepsize>samples->size()) samplesize-=periode;
+        while(samplesize-periode<0) samplesize+=periode;
+        if(samplesize+5*stepsize<=samples->size())
         {
             samplesize-=5;
             int max=0;
@@ -230,9 +184,9 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             RingBuffer<float,5> smoother;
             RingBuffer<float, 5> smoother2;
             float lastval=0;
-            for(int i=-5;i<avgperiode; i++)
+            for(int i=-5*stepsize;i<periode; i+=stepsize)
             {
-                smoother.push_back(*(samples->data()+samplesize-i));
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if(i>=1)
@@ -252,12 +206,15 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             }
             samplesize-=max;
         }
+        else samplesize=tsamplesize;
     }
-    else if(mode==5)
+    else if(mode==3)
     {
          //Find the biggest (negative) change in the periode relative to the average change of the last x samples, but smooth first
-         
-        if(samples->size()>5 and samplesize>5)
+        long tsamplesize=samplesize;
+        while(samplesize+5*stepsize>samples->size()) samplesize-=periode;
+        while(samplesize-periode<0) samplesize+=periode;
+        if(samplesize+5*stepsize<=samples->size())
         {
             samplesize-=5;
             int min=0;
@@ -265,9 +222,9 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             RingBuffer<float,5> smoother;
             RingBuffer<float, 5> smoother2;
             float lastval=0;
-            for(int i=-5;i<avgperiode; i++)
+            for(int i=-5*stepsize;i<periode; i+=stepsize)
             {
-                smoother.push_back(*(samples->data()+samplesize-i));
+                smoother.push_back(samples->at(samplesize-i).value);
                 if(i>=0)
                 {
                     if(i>=1)
@@ -287,29 +244,26 @@ long PeriodFinder::findSamplesize(long samplesize,int mode) //Calculate an offse
             }
             samplesize-=min;
         }
+        else samplesize=tsamplesize;
     }
     return samplesize;
 }
-void calcPeriodeWrapper(PeriodFinder *finder)
-{
-    finder->findPeriode();
-    finder->done=true;
-}
-int PeriodFinder::FindBestLockMode(long samplesize)
+
+int PeriodFinder::FindBestLockMode(long samplesize,int periode)
 {   //Tries the different lockmodes and find the most stable one.
     long besttotaldiff=99999;
     int bestmode=0;
-    for(int i=1;i<=5;i++)
+    for(int i=1;i<=3;i++)
     {
         //first find initial lock
         long tmpsamplesize=samplesize;
         long maxdiff=0;
         long mindiff=100000000;
-        tmpsamplesize=findSamplesize(tmpsamplesize,i);
+        tmpsamplesize=findSamplesize(tmpsamplesize,i,periode);
         for(int j=0;j<10;j++)
         {
             //go back a few samples each time and calc the diff compared to last time
-            long diff=tmpsamplesize-findSamplesize(tmpsamplesize-5,i);
+            long diff=tmpsamplesize-findSamplesize(tmpsamplesize-5,i,periode);
             tmpsamplesize=tmpsamplesize-diff;
            // cout << diff << "\t" << i << "\t" << j << endl;
             if (diff>maxdiff) maxdiff=diff;
@@ -322,11 +276,24 @@ int PeriodFinder::FindBestLockMode(long samplesize)
             besttotaldiff=totaldiff;
             bestmode=i;
         }
-        else if(abs(totaldiff-getRunningAvgPeriode())<besttotaldiff) //to take a potential skipped periode into account, also try with periode substracted
+        else if(abs(totaldiff-periode)<besttotaldiff) //to take a potential skipped periode into account, also try with periode substracted
         {
-            besttotaldiff=abs(totaldiff-getRunningAvgPeriode());
+            besttotaldiff=abs(totaldiff-periode);
             bestmode=i;
         }
     }
     return bestmode;
+}
+void PeriodFinder::calcPeriodeThread()
+{
+    while(!stop)
+    {
+        t.tick();
+        renewPlans();
+        findPeriode();
+    }
+}
+void calcPeriodeWrapper(PeriodFinder *finder)
+{ 
+    finder->calcPeriodeThread();
 }

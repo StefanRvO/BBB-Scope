@@ -1,12 +1,11 @@
 #include "EventHandler.h"
 #include <iostream>
-EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, std::vector<double> &samples_, std::vector<unsigned long long> &times_,PeriodFinder *pFinder_)
+EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, HugeBuffer<sample,20000000> *samples_,PeriodFinder *pFinder_)
 {
     window=window_;
     renderer=renderer_;
     options=options_;
-    samples=&samples_;
-    times=&times_;
+    samples=samples_;
     pFinder=pFinder_;
 }
 void EventHandler::stateHandler()
@@ -121,12 +120,12 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     {
         if(not (event.key.keysym.mod==KMOD_LCTRL))
         options->paused^=1;
-        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode)+options->offsetX;
+        if(options->paused) options->pausedSamplesize=pFinder->findSamplesize(samples->size(),options->lockmode,pFinder->getRunningAvgPeriode())+options->offsetX;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_M)
     {
         options->lockmode++;
-        if(options->lockmode>5) options->lockmode=1;
+        if(options->lockmode>3) options->lockmode=1;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_A)
     {

@@ -12,10 +12,10 @@ struct Options
     int mouseY=0;
     bool paused=false;
     size_t pausedSamplesize;
-    int lockmode=4;
+    int lockmode=2;
 };
 struct sample
 {
-    short value;
-    timeval tv;
+    double value;
+    int64_t time; //time in ms
 };

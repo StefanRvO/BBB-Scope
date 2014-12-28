@@ -23,10 +23,10 @@ class SampleGrabber
         int socket_fd, client_fd,num;
         socklen_t size;
         std::thread t1;
+        bool stop=false;
   
     public:
-        RingBuffer<double,10000000> sBuffer;
-        RingBuffer<unsigned long long,10000000> tBuffer;
+        RingBuffer<sample,10000000> sBuffer;
         SampleGrabber(int port);
         ~SampleGrabber();
         void run();           
