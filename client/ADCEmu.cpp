@@ -60,14 +60,15 @@ int main(int argc, char *argv[])
     while(1) {
         gettimeofday(&tv,NULL);
         cursample.time=tv.tv_sec*1000000+tv.tv_usec;
-        v+=0.00001;
+        v+=0.0001;
         //fgets(buffer,MAXSIZE-1,stdin);
-        //cursample.value=v*2048+rand()%200-100;
-        //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%200-100;
-        if(v>1) cursample.value=(2-v)*2000-1000+rand()%500;
+        //cursample.value=v*2048+rand()%2000-1000;
+        //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3+rand()%2000-1000;
+        if(v>1) cursample.value=2000+rand()%300-150;
+        else cursample.value=-2000+rand()%300-150;
         //cursample.value=sin(v   )*1500;
         //t.highPresisionTick();
-        else cursample.value=v*2000-1500+rand()%500;
+        //else cursample.value=v*2000-1500+rand()%500;
         
         if(v>2) v=0;
         //else

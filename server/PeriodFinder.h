@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <thread>
 #include <vector>
+#include <cmath>
 #include <unistd.h>
 #include "RingBuffer.h"
 #include "HugeBuffer.h"

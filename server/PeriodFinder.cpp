@@ -30,41 +30,65 @@ void PeriodFinder::findPeriode()
         runningAvgBuf.push_back(periode);
         return;
     }
-    for(int i=0;i<size;i++)
+    long tmpplacement=placement-size;
+    std::cout << tmpplacement << " " << placement << " " << size << std::endl;
+    for(long i=0;i<size;i++)
     {
-        final[size-i-1]=samples->at(placement-i).value*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[i]=(samples->at(tmpplacement+i).value)*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
-    for(int i=size; i<size*2; i++)
+    for(long i=size; i<size*2; i++)
     {
         final[i]=0;
     }
-    fastAutocorrelate();
-    long first=0;
-    for (long i=10; i< size/3; i++)
-    {
-        //Find largest peak larger than 5
-        if((final[first]<final[i] or first==0) 
-        and final[i]>final[i-1] 
-        and final[i]>final[i-2] 
-        and final[i]>final[i-3] 
-        and final[i]>final[i-4] 
-        and final[i]>final[i-5]
-        and final[i]>final[i-6] 
-        and final[i]>final[i-7] 
-        and final[i]>final[i-8] 
-        and final[i]>final[i-9] 
-        and final[i]>final[i-10]) first=i;
-    }
-    if(first==0) first=size/2; //if none found, set periode to size/2
     
-    periode = first;
+    fastAutocorrelate();
+    double t=final[0];
+    
+    for (long i=0; i< size; i++) final[i]/=t; //normalize
+    //find mean
+    double mean=0;
+    for (long i=0; i< size/3; i++) mean+=final[i];
+    mean/=size/3;
+    long first=0;
+    long j=0;
+    //find first valey
+    double min=1;
+    long minplacement=0;
+    while(final[j]*0.95<min and j<size/3) 
+    {
+        if(final[j]<min)
+        {
+            min=final[j];
+            minplacement=j;
+        }
+        j++;
+    }
+    //find peak
+    j=minplacement;
+    long maxplacement=0;
+    double max=-1;
+    while(final[j]>max*0.95 and j<size/3)
+    {
+        
+        if(final[j]>max)
+        {
+            max=final[j];
+            maxplacement=j;
+        }
+        j++;
+    }
+    j=maxplacement;
+    if(j==0) j=size/3; //if none found, set periode to size/2
+
+    periode = j;
+    
     runningAvgBuf.push_back(periode);
     avgperiode=runningAvgBuf.getAvg()+0.5;
 }
 void PeriodFinder::fastAutocorrelate()
 {
     fftw_execute(forward);
-    for(int i=0; i<size/2+1;i++) out[i]*=conj(out[i]);
+    for(int i=0; i<size+1;i++) out[i]*=conj(out[i]);
     fftw_execute(backward);
 }
 
