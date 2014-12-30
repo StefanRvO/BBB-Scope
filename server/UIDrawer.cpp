@@ -81,7 +81,9 @@ void UIDrawer::Draw()
     //Clear screen
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
-    drawSamples();
+    if(options->viewMode==0) drawSamples();
+    else if(options->viewMode==1) drawDFT();
+    else if(options->viewMode==2) drawAutoCorr();
     drawUI();
     SDL_RenderPresent(renderer);
 }
@@ -177,6 +179,14 @@ void UIDrawer::drawSamples()
         //thickLineRGBA (renderer, x1, y1, x2, y2, 1, 255,0,0,255);
         SDL_RenderDrawThickLine(renderer, x1,y1,x2,y2,2);
     }
+}
+void UIDrawer::drawDFT()
+{
+
+}
+void UIDrawer::drawAutoCorr()
+{
+
 }
 void SDL_RenderDrawThickLine(SDL_Renderer* renderer, //crude hack to avoid thickLineRGBA
                        int           x1,

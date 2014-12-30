@@ -7,6 +7,8 @@
 #include <vector>
 #include <cmath>
 #include <unistd.h>
+#include <vector>
+#include <mutex>
 #include "RingBuffer.h"
 #include "HugeBuffer.h"
 #include "Timer.h"
@@ -47,6 +49,7 @@ class PeriodFinder {
         void renewPlans(); //make new plans (eg. if the display has been resized)
         void findPeriode();
         bool stop=false;
+        std::mutex memlock;
     public:
         PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_);
         int getPeriode();
@@ -54,5 +57,6 @@ class PeriodFinder {
         int getRunningAvgPeriode();
         long findSamplesize(long samplesize,int mode, int periode);
         void calcPeriodeThread();
+        vector<double> getAutoCorr(int points,int start=0,int end=-1);
 };
 void calcPeriodeWrapper(PeriodFinder *finder);

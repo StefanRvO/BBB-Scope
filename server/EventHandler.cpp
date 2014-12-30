@@ -142,11 +142,19 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_O)
     {
-        std::cout <<SGrabber->RequestFastRate() << std::endl;
+        SGrabber->RequestFastRate();
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_P)
     {
-        std::cout <<SGrabber->RequestSlowerRate() << std::endl;
+        SGrabber->RequestSlowerRate();
+    }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_F)
+    {
+        if(options->viewMode<2)
+        {
+            options->viewMode++;
+            if(options->viewMode>=2) options->viewMode=0;
+        }
     }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)
