@@ -136,6 +136,7 @@ SampleGrabber::~SampleGrabber()
     close(socket_cli_samples);
     close(socket_serv_control); 
     close(socket_serv_samples);
+    t1.join();
 }
 void sampleWrapper(SampleGrabber* SGrabber)
 {

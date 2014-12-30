@@ -16,10 +16,11 @@ PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *sampl
     calcPlacement();
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
+    con= (complex<double> *) fftw_alloc_complex(size+1);
     
     //create plans
     forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(con), final, FFTW_ESTIMATE);
     t1=thread(calcPeriodeWrapper,this);
 }
 void PeriodFinder::findPeriode()
@@ -98,7 +99,7 @@ void PeriodFinder::findPeriode()
 void PeriodFinder::fastAutocorrelate()
 {
     fftw_execute(forward);
-    for(int i=0; i<size+1;i++) out[i]*=conj(out[i]);
+    for(int i=0; i<size+1;i++) con[i]=out[i]*conj(out[i]);
     fftw_execute(backward);
 }
 
@@ -110,6 +111,7 @@ PeriodFinder::~PeriodFinder()
     fftw_destroy_plan(backward);
     fftw_free(out);
     fftw_free(final);
+    fftw_free(con);
 }
 void PeriodFinder::calcSize() //calculate the number of samples to perform fft on, normaly about 5*last measured periode
 {
@@ -164,12 +166,14 @@ void PeriodFinder::renewPlans()
     if(size==tmpSize) return; //don't renew plans if nothing changed.
     fftw_free(out);
     fftw_free(final);
+    fftw_free(con);
     fftw_destroy_plan(forward);
     fftw_destroy_plan(backward);
     final=fftw_alloc_real(size*2);
     out = (complex<double> *) fftw_alloc_complex(size+1);
+    con= (complex<double> *) fftw_alloc_complex(size+1);
     forward=fftw_plan_dft_r2c_1d(size*2, final, reinterpret_cast<fftw_complex*>(out),FFTW_ESTIMATE);
-    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(out), final, FFTW_ESTIMATE);
+    backward=fftw_plan_dft_c2r_1d(size*2, reinterpret_cast<fftw_complex*>(con), final, FFTW_ESTIMATE);
 }
 long PeriodFinder::findSamplesize(long samplesize,int mode, int periode) //Calculate an offset on the samplesize to "fix" the periodes in place. return the modified samplesize
 {
@@ -340,14 +344,13 @@ void PeriodFinder::calcPeriodeThread()
         renewPlans();
         findPeriode();
         //cout << runningAvgBuf.getAvg() << " "  << runningAvgBuf.getRelativeStandDiv() << " " << options->connected << " "<< (int)options->sampleMaxMin << endl;
-        if(tick%2==0) continue;
-        if(options->connected and options->sampleMaxMin!=-1 and runningAvgBuf.getAvg()>100000 and runningAvgBuf.getRelativeStandDiv()<0.1)
+        if(tick%4!=0) continue;
+        if(options->connected and options->sampleMaxMin!=-1 and getPeriode()>100000)
         {
-            cout << "q" <<endl;
             if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=-1;
             else options->sampleMaxMin=0;
         }
-        else if(options->connected and options->sampleMaxMin!=1 and runningAvgBuf.getAvg()<500 and runningAvgBuf.getRelativeStandDiv()<0.2)
+        else if(options->connected and options->sampleMaxMin!=1 and getPeriode()<500)
         {
             if(!SGrabber->RequestFastRate()) options->sampleMaxMin=1;
             options->sampleMaxMin=0;

@@ -31,6 +31,7 @@ class PeriodFinder {
         HugeBuffer<sample,20000000> *samples;
         double *final;
         std::complex<double> *out;
+        std::complex<double> *con;
         void fastAutocorrelate();
         void calcSize();
         void calcPlacement();
