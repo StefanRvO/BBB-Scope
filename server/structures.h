@@ -14,6 +14,7 @@ struct Options
     size_t pausedSamplesize;
     int lockmode=2;
     int8_t sampleMaxMin=0;
+    bool connected=0;
 };
 struct sample
 {

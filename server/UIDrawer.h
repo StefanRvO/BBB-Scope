@@ -24,7 +24,7 @@ class UIDrawer
         SDL_Renderer* renderer;
         HugeBuffer<sample,20000000> samples;
         EventHandler *eventHandler;
-        Options options;
+        Options *options;
         Timer timer;
         long samplesize=0;
     public:

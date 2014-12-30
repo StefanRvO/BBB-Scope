@@ -33,8 +33,14 @@ void PeriodFinder::findPeriode()
     long tmpplacement=placement-size;
     for(long i=0;i<size;i++)
     {
-        final[i]=(samples->at(tmpplacement+i).value-4096)*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[i]=(samples->at(tmpplacement+i).value);
     }
+    //remove bias
+    double mean=0;
+    for(long i=0;i<size;i++) mean+=final[i]/size;
+    for(long i=0;i<size;i++) final[i]=(final[i]-mean)*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+    
+    
     for(long i=size; i<size*2; i++)
     {
         final[i]=0;
@@ -44,11 +50,6 @@ void PeriodFinder::findPeriode()
     double t=final[0];
     
     for (long i=0; i< size; i++) final[i]/=t; //normalize
-    //find mean
-    double mean=0;
-    for (long i=0; i< size/3; i++) mean+=final[i];
-    mean/=size/3;
-    long first=0;
     long j=0;
     //find first valey
     double min=1;
@@ -66,7 +67,7 @@ void PeriodFinder::findPeriode()
     j=minplacement;
     long maxplacement=0;
     double max=-1;
-    while(final[j]>max*0.95 and j<size/3)
+    /*while(final[j]>max*0.95 and j<size/3)
     {
         
         if(final[j]>max)
@@ -75,6 +76,15 @@ void PeriodFinder::findPeriode()
             maxplacement=j;
         }
         j++;
+    }*/
+    
+    for(long i=minplacement;i<size/3;i++)
+    {
+        if(final[i]>max)
+        {
+            maxplacement=i;
+            max=final[i];
+        }
     }
     j=maxplacement;
 
@@ -322,19 +332,24 @@ int PeriodFinder::FindBestLockMode(long samplesize,int periode)
 }
 void PeriodFinder::calcPeriodeThread()
 {
+    int tick=0;
     while(!stop)
     {
+        tick++;
         t.tick();
         renewPlans();
         findPeriode();
-        if(options->sampleMaxMin!=-1 and runningAvgBuf.getAvg()>100000 and runningAvgBuf.getRelativeStandDiv()<0.1)
+        //cout << runningAvgBuf.getAvg() << " "  << runningAvgBuf.getRelativeStandDiv() << " " << options->connected << " "<< (int)options->sampleMaxMin << endl;
+        if(tick%2==0) continue;
+        if(options->connected and options->sampleMaxMin!=-1 and runningAvgBuf.getAvg()>100000 and runningAvgBuf.getRelativeStandDiv()<0.1)
         {
+            cout << "q" <<endl;
             if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=-1;
             else options->sampleMaxMin=0;
         }
-        else if(options->sampleMaxMin!=1 and runningAvgBuf.getAvg()<500 and runningAvgBuf.getRelativeStandDiv()<0.2)
+        else if(options->connected and options->sampleMaxMin!=1 and runningAvgBuf.getAvg()<500 and runningAvgBuf.getRelativeStandDiv()<0.2)
         {
-            if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=1;
+            if(!SGrabber->RequestFastRate()) options->sampleMaxMin=1;
             options->sampleMaxMin=0;
         }
     }

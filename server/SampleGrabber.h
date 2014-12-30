@@ -13,6 +13,7 @@
 #include <thread>
 #include "RingBuffer.h"
 #include "structures.h"
+#include "structures.h"
 #define BACKLOG 10000
 class SampleGrabber
 {
@@ -28,6 +29,7 @@ class SampleGrabber
         bool stop=false;
   
     public:
+        Options options;
         RingBuffer<sample,10000000> sBuffer;
         SampleGrabber(int sPort,int cPort);
         ~SampleGrabber();

@@ -3,6 +3,7 @@ using namespace std;
 UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 {
     Grabber=Grabber_;
+    options=&Grabber->options;
     //Init SDL
     if(SDL_Init(SDL_INIT_VIDEO) != 0)
     {
@@ -40,8 +41,8 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 	    TTF_Quit();
 	    exit(0);
     }
-    Pfinder=new PeriodFinder(&options,&samples,window,Grabber);   
-    eventHandler=new EventHandler(window,renderer,&options,&samples,Pfinder,Grabber);
+    Pfinder=new PeriodFinder(options,&samples,window,Grabber);   
+    eventHandler=new EventHandler(window,renderer,options,&samples,Pfinder,Grabber);
 }
 UIDrawer::~UIDrawer()
 {
@@ -56,7 +57,7 @@ UIDrawer::~UIDrawer()
 int UIDrawer::loop()
 {
     long framecounter=0;
-    while (options.alive)
+    while (options->alive)
     {
         GetNewData();
         eventHandler->handleEvents();
@@ -88,20 +89,20 @@ void UIDrawer::drawUI()
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
     
-    int scaledW=w/options.zoomX;
-    int scaledH=h/options.zoomY;
+    int scaledW=w/options->zoomX;
+    int scaledH=h/options->zoomY;
     //Draw circle at mousepos
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
     //review index calculations. May be a bit off.
-    long index=samplesize-scaledW+options.mouseX/options.zoomX;
+    long index=samplesize-scaledW+options->mouseX/options->zoomX;
     if(index>0 and index<(int)samples.size()-1)
     {
-        drawFilledCircle(renderer,options.mouseX,(4096-samples.at(index).value)*(scaledH)/4096+options.offsetY,5);
+        drawFilledCircle(renderer,options->mouseX,(4096-samples.at(index).value)*(scaledH)/4096+options->offsetY,5);
         //write out value
     }
     //Draw axes
     SDL_SetRenderDrawColor(renderer,255,255,0,255);
-    SDL_RenderDrawLine(renderer,0,scaledH/2+options.offsetY,w,scaledH/2+options.offsetY);
+    SDL_RenderDrawLine(renderer,0,scaledH/2+options->offsetY,w,scaledH/2+options->offsetY);
     SDL_RenderDrawLine(renderer,w/2,0,w/2,h);
     TextDrawer txtDraw("FreeSans.ttf",h/30);
     
@@ -111,7 +112,7 @@ void UIDrawer::drawUI()
         txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples.at(index).value)).c_str(),0,h/30,200,200,40,0);
         long long diff=samples.at(index).time-samples.at((int)samples.size()-1).time;
         txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
-        if(options.paused)
+        if(options->paused)
         {
             diff=samples.at(index).time-samples.at(samplesize-1).time;
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
@@ -137,7 +138,7 @@ void UIDrawer::drawUI()
         txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     }
         txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
-        switch (options.lockmode)
+        switch (options->lockmode)
         {
             case 0:
                 txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
@@ -159,33 +160,33 @@ void UIDrawer::drawSamples()
     //Draw samples
     int w,h;
     SDL_GetWindowSize(window,&w,&h);
-    w/=options.zoomX;
-    h/=options.zoomY;
+    w/=options->zoomX;
+    h/=options->zoomY;
     
-    if(options.paused)
+    if(options->paused)
     {
-        samplesize=options.pausedSamplesize-options.offsetX;
+        samplesize=options->pausedSamplesize-options->offsetX;
     }
     else 
     {   //try to fit to signal so the signal locks in place
-        samplesize=(long)samples.size()-(options.offsetX);
-        samplesize=Pfinder->findSamplesize(samplesize,options.lockmode, Pfinder->getRunningAvgPeriode());
+        samplesize=(long)samples.size()-(options->offsetX);
+        samplesize=Pfinder->findSamplesize(samplesize,options->lockmode, Pfinder->getRunningAvgPeriode());
     }
     int i=w;
     if(samplesize-1 < w) i=samplesize-1;
     SDL_SetRenderDrawColor(renderer,255,0,0,255);
-    /*cout << options.zoomY << " " << h << " " << options.zoomX << " " << w << endl;
-    cout << options.offsetY << " " << options.offsetX << endl; */
-    //samplesize-=options.offsetX;
+    /*cout << options->zoomY << " " << h << " " << options->zoomX << " " << w << endl;
+    cout << options->offsetY << " " << options->offsetX << endl; */
+    //samplesize-=options->offsetX;
     if(samplesize>samples.size()) return;
-    for(; i > 1; i-=((int)(0.5/options.zoomX))+1)
+    for(; i > 1; i-=((int)(0.5/options->zoomX))+1)
     {
         if(samplesize-i<0 ) continue;
-        if(samplesize-i+((int)(0.5/options.zoomX))+1>samples.size()) continue;
-        Sint16 x1=(w-i)*options.zoomX;
-        Sint16 y1=(4096-samples.at(samplesize-i).value)*h/4096+options.offsetY;
-        Sint16 x2=(w-i+1)*options.zoomX;
-        Sint16 y2=((4096-samples.at(samplesize-i+((int)(0.5/options.zoomX))+1).value)*h/4096)+options.offsetY;
+        if(samplesize-i+((int)(0.5/options->zoomX))+1>samples.size()) continue;
+        Sint16 x1=(w-i)*options->zoomX;
+        Sint16 y1=(4096-samples.at(samplesize-i).value)*h/4096+options->offsetY;
+        Sint16 x2=(w-i+1)*options->zoomX;
+        Sint16 y2=((4096-samples.at(samplesize-i+((int)(0.5/options->zoomX))+1).value)*h/4096)+options->offsetY;
         //thickLineRGBA (renderer, x1, y1, x2, y2, 1, 255,0,0,255);
         SDL_RenderDrawThickLine(renderer, x1,y1,x2,y2,2);
     }

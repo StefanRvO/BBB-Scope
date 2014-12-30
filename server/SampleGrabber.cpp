@@ -72,6 +72,7 @@ void SampleGrabber::run()
             perror("accept");
             exit(1);
         }
+        options.connected=true;
         printf("Server got connection from client %s\n", inet_ntoa(dest_samples.sin_addr));
         while(!stop) 
         {
@@ -103,7 +104,8 @@ bool SampleGrabber::RequestFastRate()
         close(socket_serv_control);
         exit(1);
     }
-    if ( read(socket_cli_control, (char *)&cont, sizeof(cont) )== -1) 
+    int offset=0;
+    if ( (read(socket_cli_control, &cont, sizeof(cont) )== -1)) 
     {
         perror("recv");
         exit(1);
@@ -120,7 +122,7 @@ bool SampleGrabber::RequestSlowerRate()
         close(socket_serv_control);
         exit(1);
     }
-    if ( read(socket_cli_control, (char *)&cont, sizeof(cont) )== -1) 
+    if ( (read(socket_cli_control, &cont, 1 )== -1)) 
     {
         perror("recv");
         exit(1);
