@@ -6,6 +6,7 @@
 #include <array>
 #include <mutex>
 #include <cmath>
+#include <limits>
 template <class T,std::size_t _size>
 class RingBuffer 
 {
@@ -92,7 +93,7 @@ class RingBuffer
             ioTotal=0;
             lock.unlock();
         }
-        float getAvg()
+        double getAvg()
         {
             size_t tmpsize=size();
             long long tmpTAIL=TAIL;
@@ -103,7 +104,7 @@ class RingBuffer
             }
             return avg/tmpsize;
         }
-        float getStandDiv()
+        double getStandDiv()
         {
             size_t tmpsize=size();
             double mean= getAvg();
@@ -116,7 +117,7 @@ class RingBuffer
             avg/=tmpsize;
             return sqrt(avg);
         }
-        float getRelativeStandDiv()
+        double getRelativeStandDiv()
         {
             size_t tmpsize=size();
             double mean= getAvg();
@@ -129,5 +130,33 @@ class RingBuffer
             avg/=tmpsize;
             return sqrt(avg)/mean;
         }
+        double getMaxDiff()
+        {
+            size_t tmpsize=size();
+            long long tmpTAIL=TAIL;
+            double max=-std::numeric_limits<double>::infinity();
+            double min=std::numeric_limits<double>::infinity();
+            for(size_t i=0; i<tmpsize;i++)
+            {
+                if(*(Buffer->data()+((tmpTAIL+i)%capacity()))>max) max=*(Buffer->data()+((tmpTAIL+i)%capacity()));
+                if(*(Buffer->data()+((tmpTAIL+i)%capacity()))<min) min=*(Buffer->data()+((tmpTAIL+i)%capacity()));
+            }
+            return max-min;
+        }
+        double getRealativeMaxDiff()
+        {
+            size_t tmpsize=size();
+            double mean= getAvg();
+            long long tmpTAIL=TAIL;
+            double max=-std::numeric_limits<double>::infinity();
+            double min=std::numeric_limits<double>::infinity();
+            for(size_t i=0; i<tmpsize;i++)
+            {
+                if(*(Buffer->data()+((tmpTAIL+i)%capacity()))>max) max=*(Buffer->data()+((tmpTAIL+i)%capacity()));
+                if(*(Buffer->data()+((tmpTAIL+i)%capacity()))<min) min=*(Buffer->data()+((tmpTAIL+i)%capacity()));
+            }
+            return (max-min)/mean;
+        }
+        
 };
 

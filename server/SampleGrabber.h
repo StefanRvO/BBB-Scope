@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <thread>
+#include <mutex>
 #include "RingBuffer.h"
 #include "structures.h"
 #include "structures.h"
@@ -27,6 +28,8 @@ class SampleGrabber
         socklen_t size;
         std::thread t1;
         bool stop=false;
+        std::mutex *controlMtx;
+        int8_t control;
   
     public:
         Options options;

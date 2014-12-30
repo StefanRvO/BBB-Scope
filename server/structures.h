@@ -15,6 +15,7 @@ struct Options
     int lockmode=2;
     int8_t sampleMaxMin=0;
     bool connected=0;
+    bool adjusted=0;
 };
 struct sample
 {

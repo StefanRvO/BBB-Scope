@@ -16,22 +16,25 @@
 #include "../server/structures.h"
 #include "../server/Timer.h"
 #include <ctime>
+#include <iostream>
 #define SAMPLESIZE 1
 #define LOOPS 1000000
 #define sPORT 3490
 #define cPORT 3491
 #define BACKLOG 100
 /* ----------------------------------------------------------- */
+using namespace std;
 void control();
 
-int speed=1;
+int speed=25;
+Timer *t;
 struct sockaddr_in server_samples,server_control;
 struct hostent *he;
 int socket_samples,socket_control,num;
 int main(int argc, char *argv[])
 {
     timeval tv;
-    Timer t(10000);
+    t=new Timer(10000*speed);
     srand(time(NULL));
     sample cursample;
 	int i=0 ,j;
@@ -80,17 +83,15 @@ int main(int argc, char *argv[])
     while(1) {
         gettimeofday(&tv,NULL);
         cursample.time=tv.tv_sec*1000000+tv.tv_usec;
-        v+=0.00001*speed;
         //fgets(buffer,MAXSIZE-1,stdin);
         //cursample.value=v*2048+rand()%2000-1000;
         //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3;
-        if(v>1) cursample.value=2000+rand()%300-150;
+        if(cursample.time%100000>50000) cursample.value=2000+rand()%300-150;
         else cursample.value=-2000+rand()%300-150;
         //cursample.value=sin(v   )*1500;
-        //t.highPresisionTick();
+        t->highPresisionTick();
         //else cursample.value=v*2000-1500+rand()%500;
         
-        if(v>2) v=0;
         //else
         //cursample.value=v*2048+rand()%200-100;
         if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) {
@@ -103,6 +104,7 @@ int main(int argc, char *argv[])
     close(socket_control);
     close(socket_samples);
     return 0;
+    delete t;
 }  
 void control()
 {
@@ -116,9 +118,10 @@ void control()
         }
         if(cont==1)
         {
-            if(speed>1)
+            if(speed<50)
             {
-                speed--;
+                cout << "speedup" << endl;
+                speed++;
                 cont=1;
              }
              else cont=0;
@@ -126,13 +129,16 @@ void control()
         }
         else if(cont==-1) 
         {
-            if(speed<10)
+            if(speed>2)
             {
-                speed++;
+                cout << "speeddown" << endl;
+                speed--;
                 cont=1;
             }
             else cont=0;
         }
+        t->setFPS(10000*speed);
+        cout << speed << endl;
         if (write(socket_control,&cont, 1)== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);

@@ -2,6 +2,7 @@
 
 SampleGrabber::SampleGrabber(int sPort,int cPort)
 {
+    controlMtx= new std::mutex;
     if ((socket_serv_samples = socket(AF_INET, SOCK_STREAM, 0))== -1) 
     {
         fprintf(stderr, "Socket failure!!\n");
@@ -97,37 +98,41 @@ void SampleGrabber::run()
 }
 bool SampleGrabber::RequestFastRate()
 {
-    int8_t cont=1;
-    if ((write(socket_cli_control,&cont, sizeof(cont))== -1)) {
+    controlMtx->lock();
+    control=1;
+    if ((write(socket_cli_control,&control, sizeof(control))== -1)) {
         printf( "Failure Sending Message\n");
         close(socket_serv_control);
         close(socket_serv_control);
         exit(1);
     }
     int offset=0;
-    if ( (read(socket_cli_control, &cont, sizeof(cont) )== -1)) 
+    if ( (read(socket_cli_control, &control, sizeof(control) )== -1)) 
     {
         perror("recv");
         exit(1);
     }
-    return cont;   
+    controlMtx->unlock();
+    return control;   
         
 }
 bool SampleGrabber::RequestSlowerRate()
 {
-    int8_t cont=-1;
-    if ((write(socket_cli_control,&cont, sizeof(cont))== -1)) {
+    controlMtx->lock();
+    control=-1;
+    if ((write(socket_cli_control,&control, sizeof(control))== -1)) {
         printf( "Failure Sending Message\n");
         close(socket_serv_control);
         close(socket_serv_control);
         exit(1);
     }
-    if ( (read(socket_cli_control, &cont, 1 )== -1)) 
+    if ( (read(socket_cli_control, &control, 1 )== -1)) 
     {
         perror("recv");
         exit(1);
     }
-    return cont;   
+    controlMtx->unlock();
+    return control;   
 }
 SampleGrabber::~SampleGrabber()
 {
@@ -137,6 +142,7 @@ SampleGrabber::~SampleGrabber()
     close(socket_serv_control); 
     close(socket_serv_samples);
     t1.join();
+    delete controlMtx;
 }
 void sampleWrapper(SampleGrabber* SGrabber)
 {

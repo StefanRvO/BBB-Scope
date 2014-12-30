@@ -43,11 +43,13 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
     }
     Pfinder=new PeriodFinder(options,&samples,window,Grabber);   
     eventHandler=new EventHandler(window,renderer,options,&samples,Pfinder,Grabber);
+    SRControl=new SampleRateControl(0.01, &samples, Grabber,options);
 }
 UIDrawer::~UIDrawer()
 {
     delete eventHandler;
     delete Pfinder;
+    delete SRControl;
     TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -119,40 +121,25 @@ void UIDrawer::drawUI()
         }
     }
     
-    //Estimate and draw samplerate
-    if((int)samples.size()>5)
+    //Draw samplerate
+    txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(SRControl->getSampleRate()) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+    
+    txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
+    switch (options->lockmode)
     {
-        long long diff=0;
-        int indexpoint=5;
-        int previndexpoint=5;
-        while(diff<1000000 and indexpoint<(int)samples.size())
-        {
-            diff=samples.at((int)samples.size()-1).time-samples.at((int)samples.size()-indexpoint-1).time;
-            previndexpoint=indexpoint;
-            indexpoint=indexpoint*1.3+5;
-        }
-        //cout << previndexpoint << "\t" << diff << endl;
-        float rate=previndexpoint/(double) diff;
-        rate*=1000000; //get Hz istead of Mhz
-        //cout << rate << endl;
-        txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(rate) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+        case 0:
+            txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
+            break;
+        case 1:
+            txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,6*h/30,200,200,40,0);
+            break;
+        case 2:
+            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,6*h/30,200,200,40,0);
+            break;
+        case 3:
+            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,6*h/30,200,200,40,0);
+            break;
     }
-        txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
-        switch (options->lockmode)
-        {
-            case 0:
-                txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
-                break;
-            case 1:
-                txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,6*h/30,200,200,40,0);
-                break;
-            case 2:
-                txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,6*h/30,200,200,40,0);
-                break;
-            case 3:
-                txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,6*h/30,200,200,40,0);
-                break;
-        }
 }
 
 void UIDrawer::drawSamples()

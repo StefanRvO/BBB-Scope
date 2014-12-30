@@ -14,7 +14,7 @@
 #include "Timer.h"
 #include "PeriodFinder.h"
 #include "HugeBuffer.h"
-
+#include "SampleRateControl.h"
 class UIDrawer
 {
     private:
@@ -24,6 +24,7 @@ class UIDrawer
         SDL_Renderer* renderer;
         HugeBuffer<sample,20000000> samples;
         EventHandler *eventHandler;
+        SampleRateControl *SRControl;
         Options *options;
         Timer timer;
         long samplesize=0;

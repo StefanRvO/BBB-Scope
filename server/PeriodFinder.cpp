@@ -347,14 +347,23 @@ void PeriodFinder::calcPeriodeThread()
         if(tick%4!=0) continue;
         if(options->connected and options->sampleMaxMin!=-1 and getPeriode()>100000)
         {
-            if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=-1;
+            if(!SGrabber->RequestSlowerRate()) 
+            {
+                options->sampleMaxMin=-1;
+                options->adjusted=1;
+            }
             else options->sampleMaxMin=0;
         }
         else if(options->connected and options->sampleMaxMin!=1 and getPeriode()<500)
         {
-            if(!SGrabber->RequestFastRate()) options->sampleMaxMin=1;
+            if(!SGrabber->RequestFastRate())
+            {
+                options->sampleMaxMin=1;
+                options->adjusted=1;
+            }
             options->sampleMaxMin=0;
         }
+        else options->adjusted=0;
     }
 }
 void calcPeriodeWrapper(PeriodFinder *finder)
