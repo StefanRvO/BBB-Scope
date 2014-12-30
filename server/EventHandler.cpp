@@ -1,12 +1,13 @@
 #include "EventHandler.h"
 #include <iostream>
-EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, HugeBuffer<sample,20000000> *samples_,PeriodFinder *pFinder_)
+EventHandler::EventHandler(SDL_Window *window_, SDL_Renderer* renderer_,Options *options_, HugeBuffer<sample,20000000> *samples_,PeriodFinder *pFinder_,SampleGrabber* SGrabber_)
 {
     window=window_;
     renderer=renderer_;
     options=options_;
     samples=samples_;
     pFinder=pFinder_;
+    SGrabber=SGrabber_;
 }
 void EventHandler::stateHandler()
 {
@@ -138,6 +139,14 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
         if(zoom==0 or zoom==std::numeric_limits<double>::infinity()) zoom=options->zoomX;
         options->offsetX=0;
         options->zoomX=zoom;
+    }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_O)
+    {
+        std::cout <<SGrabber->RequestFastRate() << std::endl;
+    }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_P)
+    {
+        std::cout <<SGrabber->RequestSlowerRate() << std::endl;
     }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)

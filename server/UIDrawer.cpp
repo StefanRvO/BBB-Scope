@@ -41,7 +41,7 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 	    exit(0);
     }
     Pfinder=new PeriodFinder(&options,&samples,window);   
-    eventHandler=new EventHandler(window,renderer,&options,&samples,Pfinder);
+    eventHandler=new EventHandler(window,renderer,&options,&samples,Pfinder,Grabber);
 }
 UIDrawer::~UIDrawer()
 {

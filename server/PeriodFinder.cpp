@@ -31,10 +31,9 @@ void PeriodFinder::findPeriode()
         return;
     }
     long tmpplacement=placement-size;
-    std::cout << tmpplacement << " " << placement << " " << size << std::endl;
     for(long i=0;i<size;i++)
     {
-        final[i]=(samples->at(tmpplacement+i).value)*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
+        final[i]=(samples->at(tmpplacement+i).value-4096)*(0.54-0.46*cos((2*M_PI*i)/(size-1)));
     }
     for(long i=size; i<size*2; i++)
     {
@@ -78,6 +77,7 @@ void PeriodFinder::findPeriode()
         j++;
     }
     j=maxplacement;
+
     if(j==0) j=size/3; //if none found, set periode to size/2
 
     periode = j;
@@ -105,6 +105,7 @@ void PeriodFinder::calcSize() //calculate the number of samples to perform fft o
 {
     auto tmpPeriode=periode;
     if(tmpPeriode<500) tmpPeriode=500;
+    if(tmpPeriode>100000) tmpPeriode=100000;
     long tmpSize=tmpPeriode*20;
     long samplesize;
     if(options->paused)

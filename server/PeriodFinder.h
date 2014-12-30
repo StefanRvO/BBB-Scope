@@ -19,7 +19,7 @@ This is probably too slow to run on each frame update, so it just runs independe
 */
 #define AVGSIZE 5
 #define UPDATERATE 10 //How many times a second the periodelenght is calculated.
-#define FSAMPLESIZEACC 3000 //accuracy of findsamplesize
+#define FSAMPLESIZEACC 5000 //accuracy of findsamplesize
 class PeriodFinder {
 
     private:
