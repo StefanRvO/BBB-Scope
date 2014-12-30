@@ -13,6 +13,7 @@ struct Options
     bool paused=false;
     size_t pausedSamplesize;
     int lockmode=2;
+    int8_t sampleMaxMin=0;
 };
 struct sample
 {

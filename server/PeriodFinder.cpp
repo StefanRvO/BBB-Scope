@@ -1,16 +1,16 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_): t(Timer(UPDATERATE))
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_): t(Timer(UPDATERATE))
 {
     options=options_;
     samples=samples_;
     window=window_;
-    
+    SGrabber=SGrabber_;
     //Enable threading
     fftw_init_threads();
     fftw_plan_with_nthreads(3);
-    for(int i=0;i<AVGSIZE; i++) runningAvgBuf.push_back(0);
+    for(int i=0;i<AVGSIZE; i++) runningAvgBuf.push_back(10000);
     //Alocate memory
     calcSize();
     calcPlacement();
@@ -317,6 +317,7 @@ int PeriodFinder::FindBestLockMode(long samplesize,int periode)
             bestmode=i;
         }
     }
+    options->sampleMaxMin=0;
     return bestmode;
 }
 void PeriodFinder::calcPeriodeThread()
@@ -326,6 +327,16 @@ void PeriodFinder::calcPeriodeThread()
         t.tick();
         renewPlans();
         findPeriode();
+        if(options->sampleMaxMin!=-1 and runningAvgBuf.getAvg()>100000 and runningAvgBuf.getRelativeStandDiv()<0.1)
+        {
+            if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=-1;
+            else options->sampleMaxMin=0;
+        }
+        else if(options->sampleMaxMin!=1 and runningAvgBuf.getAvg()<500 and runningAvgBuf.getRelativeStandDiv()<0.2)
+        {
+            if(!SGrabber->RequestSlowerRate()) options->sampleMaxMin=1;
+            options->sampleMaxMin=0;
+        }
     }
 }
 void calcPeriodeWrapper(PeriodFinder *finder)

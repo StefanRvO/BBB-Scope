@@ -10,6 +10,7 @@
 #include "RingBuffer.h"
 #include "HugeBuffer.h"
 #include "Timer.h"
+#include "SampleGrabber.h"
 /*
 This is my attempt of detection the frequency of the signal.
 It uses autocorrelation to find the frequency.
@@ -26,6 +27,7 @@ class PeriodFinder {
         fftw_plan forward;
         fftw_plan backward;
         Options *options;
+        SampleGrabber *SGrabber;
         HugeBuffer<sample,20000000> *samples;
         double *final;
         std::complex<double> *out;
@@ -45,7 +47,7 @@ class PeriodFinder {
         void findPeriode();
         bool stop=false;
     public:
-        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_);
+        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_);
         int getPeriode();
         ~PeriodFinder();
         int getRunningAvgPeriode();

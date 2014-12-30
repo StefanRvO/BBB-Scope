@@ -84,13 +84,13 @@ int main(int argc, char *argv[])
         //fgets(buffer,MAXSIZE-1,stdin);
         //cursample.value=v*2048+rand()%2000-1000;
         cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3;
-        if(v>1) cursample.value=2000+rand()%300-150;
+        //if(v>1) cursample.value=2000+rand()%300-150;
         //else cursample.value=-2000+rand()%300-150;
         //cursample.value=sin(v   )*1500;
         //t.highPresisionTick();
         //else cursample.value=v*2000-1500+rand()%500;
         
-        if(v>2) v=0;
+        //if(v>2) v=0;
         //else
         //cursample.value=v*2048+rand()%200-100;
         if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) {

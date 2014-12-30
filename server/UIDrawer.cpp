@@ -40,7 +40,7 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 	    TTF_Quit();
 	    exit(0);
     }
-    Pfinder=new PeriodFinder(&options,&samples,window);   
+    Pfinder=new PeriodFinder(&options,&samples,window,Grabber);   
     eventHandler=new EventHandler(window,renderer,&options,&samples,Pfinder,Grabber);
 }
 UIDrawer::~UIDrawer()

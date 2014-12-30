@@ -5,6 +5,7 @@
 #include <exception>
 #include <array>
 #include <mutex>
+#include <cmath>
 template <class T,std::size_t _size>
 class RingBuffer 
 {
@@ -101,6 +102,32 @@ class RingBuffer
                 avg+=*(Buffer->data()+((tmpTAIL+i)%capacity()));
             }
             return avg/tmpsize;
+        }
+        float getStandDiv()
+        {
+            size_t tmpsize=size();
+            double mean= getAvg();
+            long long tmpTAIL=TAIL;
+            double avg=0;
+            for(size_t i=0; i<tmpsize;i++)
+            {
+                avg+=pow(*(Buffer->data()+((tmpTAIL+i)%capacity()))-mean,2);
+            }
+            avg/=tmpsize;
+            return sqrt(avg);
+        }
+        float getRelativeStandDiv()
+        {
+            size_t tmpsize=size();
+            double mean= getAvg();
+            long long tmpTAIL=TAIL;
+            double avg=0;
+            for(size_t i=0; i<tmpsize;i++)
+            {
+                avg+=pow(*(Buffer->data()+((tmpTAIL+i)%capacity()))-mean,2);
+            }
+            avg/=tmpsize;
+            return sqrt(avg)/mean;
         }
 };
 
