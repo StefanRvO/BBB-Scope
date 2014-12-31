@@ -169,7 +169,7 @@ long HugeBuffer<T,_size>::tmpAllockSize()
     }
     return sum;
 }
- 
+
 template <class T,size_t _size>  
 void HugeBuffer<T,_size>::memoryHandler()    
 {   //search through memory pool and remove timed out segments
@@ -181,6 +181,8 @@ void HugeBuffer<T,_size>::memoryHandler()
         t.tick();
         //search for timed out blocks
         tmpMemMtx.lock();
+        //sort vector, latest accesed first
+        std::sort(tmpAllocks.begin(),tmpAllocks.end(),HugeBuffer<T,_size>::TempAllocLarge);
         gettimeofday(&tv,NULL);
         for(int i=0; i<tmpAllocks.size();i++)
         {
@@ -218,7 +220,11 @@ void HugeBuffer<T,_size>::memoryHandler()
         }
     }
 }  
-
+template <class T,size_t _size>  
+bool HugeBuffer<T,_size>::TempAllocLarge( TempAlloc<T> a,TempAlloc<T> b) //return true if a.timeval>b.timeval
+{
+    return timercmp(&a.lastAccess,&b.lastAccess,>);
+}
 template <class T,size_t _size>  
 void memoryHandlerWrapper(HugeBuffer<T,_size> *HB)
 {

@@ -18,6 +18,7 @@
 #include<string>
 #include<cstdio>
 #include <iostream>
+#include <algorithm>
 #include "RingBuffer.h"
 #include "Timer.h"
 #define HBUFFER_TOUT 60000000 //timeout in µs for memory blocks
@@ -49,6 +50,7 @@ class HugeBuffer
         std::thread memoryHandlerThread;
         void loadBlock(long index);
         T bufferPool(long index);
+        static bool TempAllocLarge( TempAlloc<T> a,TempAlloc<T> b);
     public:
         HugeBuffer( std::string filename);
         HugeBuffer();

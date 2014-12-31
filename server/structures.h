@@ -21,7 +21,7 @@ struct Options
 };
 struct sample
 {
-    double value;
+    int16_t value;
     int64_t time; //time in ms
 };
 struct FFTOps
