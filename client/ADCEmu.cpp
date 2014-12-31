@@ -85,8 +85,9 @@ int main(int argc, char *argv[])
         gettimeofday(&tv,NULL);
         cursample.time=tv.tv_sec*1000000+tv.tv_usec;
         v+=0.001*speed;
-        cursample.value=sin(v)*2048;
-        if(v>67) v=1;
+        if(v>1) cursample.value=1500+rand()%500;
+        else cursample.value=-1500+rand()%500;
+        if(v>2) v=0;
         if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
@@ -109,7 +110,7 @@ void control()
             perror("recv");
             exit(1);
         }
-        if(cont==1)
+        if(cont==-1)
         {
             if(speed<50)
             {
@@ -120,7 +121,7 @@ void control()
              else cont=0;
              
         }
-        else if(cont==-1) 
+        else if(cont==1) 
         {
             if(speed>2)
             {

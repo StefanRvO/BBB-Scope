@@ -122,14 +122,14 @@ bool SampleGrabber::RequestSlowerRate()
     control=-1;
     if ((write(socket_cli_control,&control, sizeof(control))== -1)) {
         printf( "Failure Sending Message\n");
+        /*close(socket_serv_control);
         close(socket_serv_control);
-        close(socket_serv_control);
-        exit(1);
+        exit(1);*/
     }
     if ( (read(socket_cli_control, &control, 1 )== -1)) 
     {
         perror("recv");
-        exit(1);
+        //exit(1);
     }
     controlMtx->unlock();
     return control;   
