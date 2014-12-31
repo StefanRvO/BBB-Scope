@@ -24,6 +24,7 @@
 #define BACKLOG 100
 /* ----------------------------------------------------------- */
 using namespace std;
+
 void control();
 
 int speed=25;
@@ -78,22 +79,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
     std::thread t1(control);
-    double v=0;
+    double v=1;
     int size;
     while(1) {
         gettimeofday(&tv,NULL);
         cursample.time=tv.tv_sec*1000000+tv.tv_usec;
-        //fgets(buffer,MAXSIZE-1,stdin);
-        //cursample.value=v*2048+rand()%2000-1000;
-        //cursample.value=(sin(v)+sin(v*2)+sin(v*3))*2048/3;
-        if(cursample.time%100000>50000) cursample.value=2000+rand()%300-150;
-        else cursample.value=-2000+rand()%300-150;
-        //cursample.value=sin(v   )*1500;
-        t->highPresisionTick();
-        //else cursample.value=v*2000-1500+rand()%500;
-        
-        //else
-        //cursample.value=v*2048+rand()%200-100;
+        v+=0.001*speed;
+        cursample.value=sin(v)*2048;
+        if(v>67) v=1;
         if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);

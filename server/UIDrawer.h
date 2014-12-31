@@ -6,6 +6,7 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 #include "SampleGrabber.h"
 #include <vector>
 #include <sys/time.h>

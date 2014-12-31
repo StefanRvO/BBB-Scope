@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdlib> 
 #include <sys/time.h>
+#include <complex>
 struct Options
 {
     bool alive=true;
@@ -22,4 +23,12 @@ struct sample
 {
     double value;
     int64_t time; //time in ms
+};
+struct FFTOps
+{
+    long start;
+    long end; //0 means whole range (to N/2)
+    long size;
+    long totalsize;
+    std::complex<double> *mem;
 };

@@ -31,9 +31,13 @@ class PeriodFinder {
         Options *options;
         SampleGrabber *SGrabber;
         HugeBuffer<sample,20000000> *samples;
+        long windowFFTSize;
+        long windowFFTFirst;
+        long windowFFTLast;
         double *final;
         std::complex<double> *out;
         std::complex<double> *con;
+        std::complex<double> *windowFFT;
         void fastAutocorrelate();
         void calcSize();
         void calcPlacement();
@@ -49,14 +53,15 @@ class PeriodFinder {
         void renewPlans(); //make new plans (eg. if the display has been resized)
         void findPeriode();
         bool stop=false;
-        std::mutex memlock;
+        std::mutex fftlock;
     public:
-        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_);
+        PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_,FFTOps fftOps);
         int getPeriode();
         ~PeriodFinder();
         int getRunningAvgPeriode();
         long findSamplesize(long samplesize,int mode, int periode);
         void calcPeriodeThread();
-        vector<double> getAutoCorr(int points,int start=0,int end=-1);
+        void changeFFTOps(FFTOps fftOps);
+        FFTOps getFFT();
 };
 void calcPeriodeWrapper(PeriodFinder *finder);

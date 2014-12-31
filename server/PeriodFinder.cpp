@@ -1,12 +1,16 @@
 #include "PeriodFinder.h"
 #include <iostream>
 using namespace std;
-PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_): t(Timer(UPDATERATE))
+PeriodFinder::PeriodFinder(Options *options_, HugeBuffer<sample,20000000> *samples_, SDL_Window *window_,SampleGrabber *SGrabber_,FFTOps fftOps): t(Timer(UPDATERATE))
 {
     options=options_;
     samples=samples_;
     window=window_;
     SGrabber=SGrabber_;
+    windowFFTSize=fftOps.size;
+    windowFFTFirst=fftOps.start;
+    windowFFTLast=fftOps.end;
+    windowFFT=(complex<double> *) fftw_alloc_complex(windowFFTSize);
     //Enable threading
     fftw_init_threads();
     fftw_plan_with_nthreads(3);
@@ -99,6 +103,20 @@ void PeriodFinder::findPeriode()
 void PeriodFinder::fastAutocorrelate()
 {
     fftw_execute(forward);
+    
+    fftlock.lock();
+    double start,end;
+    start=windowFFTFirst;
+    end=windowFFTLast;
+    if(start<0) start=0;
+    if(start>size/2-2) start=size/2-2;
+    if(end==0 or end>size/2-1) end=size/2-1;
+    else if(start>end) end=start+1;
+    double step=(end-start)/(double)windowFFTSize;
+    long j=0;
+    for( double i=start; /*i<=end and*/ j<windowFFTSize ;i+=step, j++) windowFFT[j]=out[(long)i];
+    fftlock.unlock();
+    
     for(int i=0; i<size+1;i++) con[i]=out[i]*conj(out[i]);
     fftw_execute(backward);
 }
@@ -112,6 +130,7 @@ PeriodFinder::~PeriodFinder()
     fftw_free(out);
     fftw_free(final);
     fftw_free(con);
+    fftw_free(windowFFT);
 }
 void PeriodFinder::calcSize() //calculate the number of samples to perform fft on, normaly about 5*last measured periode
 {
@@ -365,6 +384,28 @@ void PeriodFinder::calcPeriodeThread()
         }
         else options->adjusted=0;
     }
+}
+void PeriodFinder::changeFFTOps(FFTOps fftOps)
+{
+    fftlock.lock();
+    windowFFTSize=fftOps.size;
+    windowFFTFirst=fftOps.start;
+    windowFFTLast=fftOps.end;
+    fftw_free(windowFFT);
+    windowFFT=(complex<double> *) fftw_alloc_complex(size+1);
+    fftlock.unlock();
+}
+FFTOps PeriodFinder::getFFT()
+{
+    fftlock.lock();
+    FFTOps fftOps;
+    fftOps.mem=windowFFT;
+    fftOps.size=windowFFTSize;
+    fftOps.start=windowFFTFirst;
+    fftOps.end=windowFFTLast;
+    fftOps.totalsize=size;
+    fftlock.unlock();
+    return fftOps;
 }
 void calcPeriodeWrapper(PeriodFinder *finder)
 { 

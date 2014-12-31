@@ -41,7 +41,11 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
 	    TTF_Quit();
 	    exit(0);
     }
-    Pfinder=new PeriodFinder(options,&samples,window,Grabber);   
+    FFTOps fftOps;
+    fftOps.size=5000;
+    fftOps.start=0;
+    fftOps.end=900;
+    Pfinder=new PeriodFinder(options,&samples,window,Grabber,fftOps);   
     eventHandler=new EventHandler(window,renderer,options,&samples,Pfinder,Grabber);
     SRControl=new SampleRateControl(0.01, &samples, Grabber,options);
 }
@@ -182,7 +186,23 @@ void UIDrawer::drawSamples()
 }
 void UIDrawer::drawDFT()
 {
-
+    int w,h;
+    SDL_GetWindowSize(window,&w,&h);
+    FFTOps fft=Pfinder->getFFT();
+    SDL_SetRenderDrawColor(renderer,255,0,0,255);
+    double max=-99999;
+    for(long i=0;i<fft.size;i++) if(max<abs(fft.mem[i])) max=abs(fft.mem[i]);
+    //cout << fft.size << " "<< max <<endl;
+    for(long i=1;i<fft.size;i++)
+    {
+        Sint16 x1=((i-1)*w)/fft.size;
+        Sint16 x2=(i*w)/fft.size;
+        Sint16 y1=h-(abs(fft.mem[i-1])*h)/max;
+        Sint16 y2=h-(abs(fft.mem[i])*h)/max;
+        //cout << x1 << " " << y1 << endl;
+        SDL_RenderDrawThickLine(renderer, x1,y1,x2,y2,2);
+    }
+    //draw fft
 }
 void UIDrawer::drawAutoCorr()
 {
