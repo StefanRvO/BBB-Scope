@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "../server/Timer.h"
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
         pruio_rb_start(io);
         std::thread t1(sampleThread,&RB);
         std::thread t2(senderThread,&RB,&socket_samples);
-        std::thread t2(controlThread,&RB,&socket_control);
+        std::thread t3(controlThread,&RB,&socket_control);
         while(true)
         {
             usleep(100000);
@@ -119,7 +120,7 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
-        while(index%100000<io->DRam[0] or wrapped)
+        while(index%100000<io->DRam[0] or wrapped);
         t.tick();
     }
 }
