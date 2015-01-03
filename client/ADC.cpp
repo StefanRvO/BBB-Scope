@@ -18,13 +18,16 @@
 #define cPORT 3491
 
 void controlThread(int &socket_control);
-void SenderThread(RingBuffer<sample,1000000> *RB, int &socket_samples );
-void SampleThread(pruIo *io,RingBuffer<sample,1000000> *RB);
+void senderThread(RingBuffer<sample,1000000> *RB, int &socket_samples );
+void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB);
 
 
 int main(int argc, char **argv)
 {
     //Setup network
+    struct sockaddr_in server_samples,server_control;
+    struct hostent *he;
+    int socket_samples,socket_control,num;
     if (argc != 2) {
         fprintf(stderr, "Usage: client hostname\n");
         exit(1);
@@ -79,8 +82,8 @@ int main(int argc, char **argv)
         //start sampling
         pruio_rb_start(io);
         std::thread t1(sampleThread,&RB);
-        std::thread t2(SenderThread,&RB,&socket_samples);
-        std::thread t2(ControlThread,&RB,&socket_control);
+        std::thread t2(senderThread,&RB,&socket_samples);
+        std::thread t2(controlThread,&RB,&socket_control);
         while(true)
         {
             usleep(100000);
@@ -91,16 +94,16 @@ int main(int argc, char **argv)
   close(socket_samples);
   return 0;
 }
-void SampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
+void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
 {   //Grabs samples from PRU ringbuffer and puts it into global ringbuffer
     Timer t(1000);
     sample cursample;
     int index=0;
-    int wrapped=0
+    int wrapped=0;
     int lastDRam0;
     while(true)
     {
-        do()
+        do
         {
             if(io->DRam[0] < lastDRam0)
             {
@@ -120,7 +123,7 @@ void SampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
         t.tick();
     }
 }
-void SenderThread(RingBuffer<sample,1000000> *RB, int &socket_samples )
+void senderThread(RingBuffer<sample,1000000> *RB, int &socket_samples )
 {
     Timer t(1000);
     while(true)
@@ -128,7 +131,7 @@ void SenderThread(RingBuffer<sample,1000000> *RB, int &socket_samples )
         while(RB->size())
         {
             auto cursample=RB->pop_front();
-            if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) 
+            if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
             {
                 printf( "Failure Sending Message\n");
                 close(socket_control);
@@ -154,7 +157,7 @@ void controlThread(int &socket_control)
         {
             if(speed<50)
             {
-                cout << "speedup" << endl;
+                printf("speedup");
                 speed++;
                 cont=1;
              }
@@ -165,7 +168,7 @@ void controlThread(int &socket_control)
         {
             if(speed>2)
             {
-                cout << "speeddown" << endl;
+                printf("speeddown");
                 speed--;
                 cont=1;
             }
