@@ -112,10 +112,11 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             {
                 wrapped++;
             }
-            if(index==100000)
+            if(index>=100000)
             {
                 index=0; //make sure index don't overflow
                 wrapped--;
+                printf("%d\n",index);
             }
             cursample.value=io->Adc->Value[index++];
             gettimeofday(&tv,NULL);
@@ -123,7 +124,7 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
-        while(index<lastDRam0 or wrapped);
+        while(index<(((int)lastDRam0)-1)%100000 or wrapped);
         t.tick();
     }
 }
