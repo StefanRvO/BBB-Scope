@@ -21,6 +21,7 @@
 void controlThread();
 void senderThread(RingBuffer<sample,1000000> *RB);
 void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB);
+pruIo *io;
 
 struct sockaddr_in server_samples,server_control;
 struct hostent *he;
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     //Setup ADC
     int minTime=6290;
     int maxTime=1000000;
-    pruIo *io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! create new driver structure
+    io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! create new driver structure
     pruio_adc_setStep(io, 1, 1, 0, 0, 0); // step 1 for AIN-1
 
     if (pruio_config(io, 100000, 1 << 1, 6290, 0)) //step 1, 6290ns/sample -> 158,98 KHz
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
 }
 void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
 {   //Grabs samples from PRU ringbuffer and puts it into global ringbuffer
-    Timer t(1000);
+    Timer t(100);
     sample cursample;
     int index=0;
     int wrapped=0;
@@ -122,23 +123,25 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
-        while(index%100000<io->DRam[0] or wrapped);
+        while(index<lastDRam0 or wrapped);
         t.tick();
     }
 }
 void senderThread(RingBuffer<sample,1000000> *RB)
 {
-    Timer t(1000);
+    Timer t(100);
+    sample cursample;
     while(true)
     {
         while(RB->size())
         {
-            auto cursample=RB->pop_front();
+            cursample=RB->pop_front();
             if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
             {
                 printf( "Failure Sending Message\n");
                 close(socket_control);
                 close(socket_samples);
+                pruio_destroy(io);
                 exit(1);
             }
         }
@@ -154,6 +157,9 @@ void controlThread()
         if(read(socket_control,&cont,sizeof(cont))==-1)
         {
             perror("recv");
+            close(socket_control);
+            close(socket_samples);
+            pruio_destroy(io);
             exit(1);
         }
         if(cont==-1)
@@ -181,6 +187,7 @@ void controlThread()
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
+            pruio_destroy(io);
             exit(1);
         }
     }
