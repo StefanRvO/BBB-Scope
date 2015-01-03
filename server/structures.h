@@ -17,7 +17,7 @@ struct Options
     int8_t sampleMaxMin=0;
     bool connected=0;
     bool adjusted=0;
-    u_int8_t viewMode=0;
+    int8_t viewMode=0;
 };
 struct sample
 {

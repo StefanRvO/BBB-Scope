@@ -126,7 +126,7 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     else if(event.key.keysym.scancode==SDL_SCANCODE_M)
     {
         options->lockmode++;
-        if(options->lockmode>3) options->lockmode=1;
+        if(options->lockmode>4) options->lockmode=1;
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_A)
     {

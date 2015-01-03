@@ -26,7 +26,7 @@ pruIo *io;
 struct sockaddr_in server_samples,server_control;
 struct hostent *he;
 int socket_samples,socket_control,num;
-    
+long sampletime=6290;
 int main(int argc, char **argv)
 {
     //Setup network
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! create new driver structure
     pruio_adc_setStep(io, 1, 1, 0, 0, 0); // step 1 for AIN-1
 
-    if (pruio_config(io, 100000, 1 << 1, 6290, 0)) //step 1, 6290ns/sample -> 158,98 KHz
+    if (pruio_config(io, 100000, 1 << 1, sampletime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
         printf("config failed (%s)\n", io->Errr);}
     else
@@ -98,7 +98,6 @@ int main(int argc, char **argv)
 }
 void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
 {   //Grabs samples from PRU ringbuffer and puts it into global ringbuffer
-    Timer t(100);
     sample cursample;
     int index=0;
     int wrapped=0;
@@ -106,26 +105,22 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
     timeval tv;
     while(true)
     {
+        lastDRam0=io->DRam[0];
         do
         {
-            if(io->DRam[0] < lastDRam0)
-            {
-                wrapped++;
-            }
+            index++;
             if(index>=100000)
             {
                 index=0; //make sure index don't overflow
-                wrapped--;
-                printf("%d\n",index);
             }
-            cursample.value=io->Adc->Value[index++];
+            cursample.value=io->Adc->Value[index];
             gettimeofday(&tv,NULL);
             cursample.time=((int64_t)tv.tv_sec*1000000)+tv.tv_usec;
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
-        while(index<(((int)lastDRam0)-1)%100000 or wrapped);
-        t.tick();
+        while(index!=lastDRam0);
+        usleep(sampletime/200); //wait at least 5 samples
     }
 }
 void senderThread(RingBuffer<sample,1000000> *RB)

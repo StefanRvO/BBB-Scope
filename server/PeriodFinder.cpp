@@ -201,7 +201,8 @@ long PeriodFinder::findSamplesize(long samplesize,int mode, int periode) //Calcu
     //stepsize=1;
     if (stepsize==0) stepsize=1;
     //This code is not safe. May read out of bounds TOFIX
-    if(mode==0)
+    if(mode==4)  return samplesize;
+    else if(mode==0)
     {
         //search for best lockmode
         options->lockmode=FindBestLockMode(samplesize,periode);
