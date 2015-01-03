@@ -1,5 +1,5 @@
 #pragma once
-#include <unistd.h>
+#include <sys/time.h>
 #include "RingBuffer.h"
 #define AVGLENGHT 30
 class Timer

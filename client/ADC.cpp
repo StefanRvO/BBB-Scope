@@ -11,8 +11,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "../server/Timer.h"
-#include <../server/Ringbuffer.h>
-#include <../server/structures.h>
+#include "../server/RingBuffer.h"
+#include "../server/structures.h"
 
 #define sPORT 3490
 #define cPORT 3491
