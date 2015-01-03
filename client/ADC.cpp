@@ -102,6 +102,7 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
     int index=0;
     int wrapped=0;
     int lastDRam0;
+    timeval tv;
     while(true)
     {
         do
@@ -116,7 +117,8 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
                 wrapped--;
             }
             cursample.value=io->Adc->Value[index++];
-            gettimeofday(&cursample.time,NULL);
+            gettimeofday(&tv,NULL);
+            cursample.time=((int64_t)tv.tv_sec*1000000)+tv.tv_usec;
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
