@@ -18,17 +18,17 @@
 #define sPORT 3490
 #define cPORT 3491
 
-void controlThread(int &socket_control);
-void senderThread(RingBuffer<sample,1000000> *RB, int &socket_samples );
+void controlThread();
+void senderThread(RingBuffer<sample,1000000> *RB);
 void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB);
 
-
+struct sockaddr_in server_samples,server_control;
+struct hostent *he;
+int socket_samples,socket_control,num;
+    
 int main(int argc, char **argv)
 {
     //Setup network
-    struct sockaddr_in server_samples,server_control;
-    struct hostent *he;
-    int socket_samples,socket_control,num;
     if (argc != 2) {
         fprintf(stderr, "Usage: client hostname\n");
         exit(1);
@@ -83,8 +83,8 @@ int main(int argc, char **argv)
         //start sampling
         pruio_rb_start(io);
         std::thread t1(sampleThread,&RB);
-        std::thread t2(senderThread,&RB,&socket_samples);
-        std::thread t3(controlThread,&RB,&socket_control);
+        std::thread t2(senderThread,&RB);
+        std::thread t3(controlThread,&RB);
         while(true)
         {
             usleep(100000);
@@ -126,7 +126,7 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
         t.tick();
     }
 }
-void senderThread(RingBuffer<sample,1000000> *RB, int &socket_samples )
+void senderThread(RingBuffer<sample,1000000> *RB)
 {
     Timer t(1000);
     while(true)
@@ -145,7 +145,7 @@ void senderThread(RingBuffer<sample,1000000> *RB, int &socket_samples )
         t.tick();
     }
 }
-void controlThread(int &socket_control)
+void controlThread()
 {
     int speed=5;
     int8_t cont;
