@@ -82,9 +82,9 @@ int main(int argc, char **argv)
         RingBuffer<sample,1000000> RB;
         //start sampling
         pruio_rb_start(io);
-        std::thread t1(sampleThread,&RB);
+        std::thread t1(sampleThread,io,&RB);
         std::thread t2(senderThread,&RB);
-        std::thread t3(controlThread,&RB);
+        std::thread t3(controlThread);
         while(true)
         {
             usleep(100000);
