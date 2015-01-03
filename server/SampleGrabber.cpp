@@ -90,7 +90,6 @@ void SampleGrabber::run()
             pointeroffset=(pointeroffset+num)%sizeof(cursample);
             if(pointeroffset==0)
             {
-                cursample.value+=2048;
                 sBuffer.push_back(cursample);
             }
         }

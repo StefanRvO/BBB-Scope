@@ -15,7 +15,7 @@
 #include "RingBuffer.h"
 #include "structures.h"
 #include "structures.h"
-#define BACKLOG 10000
+#define BACKLOG 100000
 class SampleGrabber
 {
     private:

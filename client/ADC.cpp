@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     int minTime=6290;
     int maxTime=1000000;
     pruIo *io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! create new driver structure
-    pruio_adc_setStep(io, 1, 8, 0, 0, 0); // step 1 for AIN-8
+    pruio_adc_setStep(io, 1, 1, 0, 0, 0); // step 1 for AIN-1
 
     if (pruio_config(io, 100000, 1 << 1, 6290, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
