@@ -100,13 +100,17 @@ void SampleGrabber::ControlReciever()
 {
     controlMessage control;
     int pointer=0;
+    int size;
     while(!stop)
     {
-        if ( (read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
+        
+        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
         {
             perror("recv");
             exit(1);
         }
+        pointer+=size;
+        printf("test\n");
         if(pointer==sizeof(control))
         {
             pointer=0;

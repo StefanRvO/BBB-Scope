@@ -142,11 +142,11 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_O)
     {
-        SGrabber->RequestChangedRate(1);
+        SGrabber->RequestChangedRate(50);
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_P)
     {
-        SGrabber->RequestChangedRate(-1);
+        SGrabber->RequestChangedRate(-50);
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_F)
     {

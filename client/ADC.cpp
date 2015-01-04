@@ -156,6 +156,8 @@ void controlThread()
 {
     controlMessage control;
     control.time=sampletime;
+    int pointer=0;
+    int size;
     if (write(socket_control,&control, sizeof(control))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);
@@ -165,7 +167,7 @@ void controlThread()
     }
     while(true)
     {
-        if(read(socket_control,&control,sizeof(controlMessage))==-1)
+        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
         {
             perror("recv");
             close(socket_control);
@@ -173,6 +175,9 @@ void controlThread()
             pruio_destroy(io);
             exit(1);
         }
+        pointer+=size;
+        if(pointer!=sizeof(control) continue;
+        pointer=0;
         if(control.changespeed<=-1)
         {
             if(sampletime>minTime)
