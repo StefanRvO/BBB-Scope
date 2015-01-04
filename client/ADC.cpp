@@ -222,7 +222,7 @@ void controlThread()
             printf("%ld\n",sampletime);
         }
         control.time=sampletime;
-        if ((size=write(socket_cli_control,&control, sizeof(controlMessage))== -1)) {
+        if ((size=write(socket_control,&control, sizeof(controlMessage))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
