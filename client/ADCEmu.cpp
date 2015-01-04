@@ -1,46 +1,33 @@
-//Emulates a sine curve and send through network.
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <thread>
 #include <errno.h>
 #include <string.h>
 #include <netdb.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <cmath>
-#include <thread>
-#include <fcntl.h>
 #include "../server/structures.h"
 #include "../server/Timer.h"
-#include <ctime>
-#include <iostream>
-#define SAMPLESIZE 1
-#define LOOPS 1000000
 #define sPORT 3490
 #define cPORT 3491
-#define BACKLOG 100
-/* ----------------------------------------------------------- */
-using namespace std;
 
-void control();
-
-int speed=25;
-Timer *t;
+void controlThread();
+void senderThread();
+int samplelock=0;
 struct sockaddr_in server_samples,server_control;
 struct hostent *he;
 int socket_samples,socket_control,num;
-int main(int argc, char *argv[])
+long sampletime=6290;
+int minTime=6290;
+int maxTime=1000000;
+Timer t(1000000000./sampletime);
+int main(int argc, char **argv)
 {
-    timeval tv;
-    t=new Timer(10000*speed);
-    srand(time(NULL));
-    sample cursample;
-	int i=0 ,j;
-	int buffer_AIN_0[SAMPLESIZE] ={0};
-
+    //Setup network
     if (argc != 2) {
         fprintf(stderr, "Usage: client hostname\n");
         exit(1);
@@ -78,62 +65,90 @@ int main(int argc, char *argv[])
         perror("connect");
         exit(1);
     }
-    std::thread t1(control);
-    double v=1;
-    int size;
-    while(1) {
-        gettimeofday(&tv,NULL);
-        cursample.time=tv.tv_sec*1000000+tv.tv_usec;
-        v+=0.001*speed;
-        if(v>1) cursample.value=1500+rand()%500;
-        else cursample.value=-1500+rand()%500;
-        if(v>2) v=0;
-        if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) {
-            printf( "Failure Sending Message\n");
-            close(socket_control);
-            close(socket_samples);
-            exit(1);
-        }
-    }
-    close(socket_control);
-    close(socket_samples);
-    return 0;
-    delete t;
-}  
-void control()
-{
-    int8_t cont;
+    std::thread t2(senderThread);
+    std::thread t3(controlThread);
     while(true)
     {
-        if(read(socket_control,&cont,sizeof(cont))==-1)
+        usleep(100000);
+    }
+  close(socket_control);
+  close(socket_samples);
+  return 0;
+}
+void senderThread()
+{
+    sample cursample;
+    int size;
+    double v=0;
+    while(true)
+    {
+        v+=0.0001;
+        cursample.value=sin(v)*2048+2048;
+        if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) 
         {
-            perror("recv");
+            printf( "Failure Sending Message\n");
+            close(socket_control);
+            close(socket_samples);
             exit(1);
         }
-        if(cont==-1)
+        t.tick();
+    }
+}
+void controlThread()
+{
+    controlMessage control;
+    control.time=sampletime;
+    int pointer=0;
+    int size;
+    int sendpointer=0;
+    if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+        printf( "Failure Sending Message\n");
+        close(socket_control);
+        close(socket_samples);
+        exit(1);
+    }
+    sendpointer=0;
+    printf("controlsend return %d\n",size);
+    while(true)
+    {
+        if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
         {
-            if(speed<50)
+            perror("recv");
+            close(socket_control);
+            close(socket_samples);
+            exit(1);
+        }
+        pointer+=size;
+        if(pointer!=sizeof(controlMessage)) continue;
+        pointer=0;
+        if(control.changespeed<=-1)
+        {
+            if(sampletime+5*-control.changespeed<maxTime)
             {
-                cout << "speedup" << endl;
-                speed++;
-                cont=1;
+                printf("speeddown\n");
+                sampletime+=5*-control.changespeed;
+                control.changespeed=-1;
              }
-             else cont=0;
-             
+             else control.changespeed=0;
         }
-        else if(cont==1) 
+        else if(control.changespeed>=1) 
         {
-            if(speed>2)
+            if(sampletime+5*-control.changespeed>minTime)
             {
-                cout << "speeddown" << endl;
-                speed--;
-                cont=1;
+                printf("speedup\n");
+                sampletime+=5*-control.changespeed;
+                control.changespeed=1;
             }
-            else cont=0;
+            else control.changespeed=0;
+            
         }
-        t->setFPS(10000*speed);
-        cout << speed << endl;
-        if (write(socket_control,&cont, 1)== -1) {
+        if(control.changespeed)
+        {
+            t.setFPS(1000000000./sampletime);
+            printf("%ld\n",sampletime);
+        }
+        control.time=sampletime;
+        if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
@@ -141,4 +156,3 @@ void control()
         }
     }
 }  
-

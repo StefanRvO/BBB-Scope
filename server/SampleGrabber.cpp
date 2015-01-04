@@ -86,6 +86,7 @@ void SampleGrabber::run()
             else if (num == 0) 
             {
                 printf("Connection closed\n");
+                options.connected=false;
                 break;
             }
             pointeroffset=(pointeroffset+num)%sizeof(cursample);
@@ -101,28 +102,22 @@ void SampleGrabber::ControlReciever()
     controlMessage control;
     int pointer=0;
     int size;
+    Timer t(60);
     while(!stop)
     {
-        printf("test1\n");
-        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
+        while (options.connected)
         {
-            perror("recv");
-            exit(1);
-        }
-        pointer+=size;
-        if(pointer!=sizeof(controlMessage)) continue;
-        pointer=0;
-        printf("test2\n");
-        if(pointer==sizeof(control))
-        {
-            pointer=0;
-            if(control.time) 
+            if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
             {
-                options.sampletime=control.time;
-                printf("%ld\n",options.sampletime);
+                break;
             }
+            pointer+=size;
+            if(pointer!=sizeof(controlMessage)) continue;
+            pointer=0;
+            options.sampletime=control.time;
+            std::cout << options.sampletime << std::endl;
         }
-        printf("test3\n");
+        t.tick();
     }
 }
 void SampleGrabber::RequestChangedRate(int16_t rate )

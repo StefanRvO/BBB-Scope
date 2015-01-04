@@ -135,7 +135,7 @@ PeriodFinder::~PeriodFinder()
 void PeriodFinder::calcSize() //calculate the number of samples to perform fft on, normaly about 5*last measured periode
 {
     auto tmpPeriode=periode;
-    if(tmpPeriode<500) tmpPeriode=500;
+    if(tmpPeriode<20000) tmpPeriode=20000;
     if(tmpPeriode>100000) tmpPeriode=100000;
     long tmpSize=tmpPeriode*20;
     long samplesize;

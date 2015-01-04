@@ -14,7 +14,7 @@
 #include <mutex>
 #include "RingBuffer.h"
 #include "structures.h"
-#include "structures.h"
+#include "Timer.h"
 #define BACKLOG 10000
 class SampleGrabber
 {
