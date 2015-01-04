@@ -108,13 +108,18 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
     timeval tv;
     while(true)
     {
-        while(samplelock) usleep(100);
+        while(samplelock) 
+        {
+            usleep(sampletime/200); //wait at least 5 samples
+            index=io->DRam[0];
+        }
+        
         lastDRam0=io->DRam[0];
         do
         {
             if(samplelock)
             {
-                index=0;
+                index=io->DRam[0];
                 wrapped=0;
                 break;
             }
@@ -182,7 +187,7 @@ void controlThread()
         {
             if(sampletime+5*-control.changespeed>minTime)
             {
-                printf("speeddown");
+                printf("speeddown\n");
                 sampletime+=5*-control.changespeed;
                 control.changespeed=-1;
              }
@@ -192,7 +197,7 @@ void controlThread()
         {
             if(sampletime+5*-control.changespeed<maxTime)
             {
-                printf("speedup");
+                printf("speedup\n");
                 sampletime+=5*-control.changespeed;
                 control.changespeed=1;
             }
@@ -211,7 +216,7 @@ void controlThread()
                 pruio_rb_start(io);
             }
             samplelock=0;
-            printf("%d\n",sampletime);
+            printf("%ld\n",sampletime);
         }
         control.time=sampletime;
         if (write(socket_control,&control, sizeof(control))== -1) {

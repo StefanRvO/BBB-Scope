@@ -114,7 +114,11 @@ void SampleGrabber::ControlReciever()
         if(pointer==sizeof(control))
         {
             pointer=0;
-            if(control.time) options.sampletime=control.time;
+            if(control.time) 
+            {
+                options.sampletime=control.time;
+                printf("%ld\n",sampletime;
+            }
         }
     }
 }
