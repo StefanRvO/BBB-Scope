@@ -176,12 +176,11 @@ void controlThread()
             exit(1);
         }
         pointer+=size;
-        printf("%d\n",pointer);
         if(pointer!=sizeof(controlMessage)) continue;
         pointer=0;
         if(control.changespeed<=-1)
         {
-            if(sampletime>minTime)
+            if(sampletime+5*-control.changespeed>minTime)
             {
                 printf("speeddown");
                 sampletime+=5*-control.changespeed;
@@ -191,7 +190,7 @@ void controlThread()
         }
         else if(control.changespeed<=-1) 
         {
-            if(sampletime<maxTime)
+            if(sampletime+5*-control.changespeed<maxTime)
             {
                 printf("speedup");
                 sampletime+=5*-control.changespeed;
@@ -212,6 +211,7 @@ void controlThread()
                 pruio_rb_start(io);
             }
             samplelock=0;
+            printf("%d\n",sampletime);
         }
         control.time=sampletime;
         if (write(socket_control,&control, sizeof(control))== -1) {
