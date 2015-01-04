@@ -156,7 +156,7 @@ void controlThread()
 {
     controlMessage control;
     control.time=sampletime;
-    if (write(socket_control,&control, 1)== -1) {
+    if (write(socket_control,&control, sizeof(control))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
@@ -208,7 +208,7 @@ void controlThread()
             samplelock=0;
         }
         control.time=sampletime;
-        if (write(socket_control,&control, 1)== -1) {
+        if (write(socket_control,&control, sizeof(control))== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);

@@ -18,7 +18,7 @@ struct Options
     bool connected=0;
     bool adjusted=0;
     int8_t viewMode=0;
-    uint64_t sampletime;
+    uint64_t sampletime=6290;
     bool locked=0;
 };
 struct sample
