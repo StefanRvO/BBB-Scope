@@ -117,7 +117,7 @@ void SampleGrabber::ControlReciever()
             if(control.time) 
             {
                 options.sampletime=control.time;
-                printf("%ld\n",sampletime;
+                printf("%ld\n",options.sampletime);
             }
         }
     }
