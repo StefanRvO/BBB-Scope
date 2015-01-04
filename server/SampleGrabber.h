@@ -27,6 +27,7 @@ class SampleGrabber
         int socket_serv_samples,socket_serv_control, socket_cli_samples,socket_cli_control,num;
         socklen_t size;
         std::thread t1;
+        std::thread t2;
         bool stop=false;
         std::mutex *controlMtx;
   
@@ -41,3 +42,4 @@ class SampleGrabber
     
 };
 void sampleWrapper(SampleGrabber* SGrabber);
+void controlWrapper(SampleGrabber* SGrabber);

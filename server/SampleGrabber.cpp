@@ -56,6 +56,7 @@ SampleGrabber::SampleGrabber(int sPort,int cPort)
         exit(1);
     }
     t1=std::thread(sampleWrapper,this); 
+    t2=std::thread(controlWrapper,this); 
 }
 void SampleGrabber::run()
 {
