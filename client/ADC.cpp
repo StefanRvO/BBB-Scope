@@ -176,7 +176,7 @@ void controlThread()
             exit(1);
         }
         pointer+=size;
-        printf("%d\n",pointer)
+        printf("%d\n",pointer);
         if(pointer!=sizeof(controlMessage)) continue;
         pointer=0;
         if(control.changespeed<=-1)
