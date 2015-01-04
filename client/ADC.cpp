@@ -167,7 +167,7 @@ void controlThread()
     }
     while(true)
     {
-        if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer )== -1)) 
+        if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
         {
             perror("recv");
             close(socket_control);

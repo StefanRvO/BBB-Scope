@@ -104,7 +104,7 @@ void SampleGrabber::ControlReciever()
     while(!stop)
     {
         
-        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
+        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer ))== -1) 
         {
             perror("recv");
             exit(1);
