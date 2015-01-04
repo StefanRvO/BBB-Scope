@@ -193,7 +193,7 @@ void controlThread()
              }
              else control.changespeed=0;
         }
-        else if(control.changespeed<=-1) 
+        else if(control.changespeed>=1) 
         {
             if(sampletime+5*-control.changespeed>minTime)
             {
