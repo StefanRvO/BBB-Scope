@@ -47,13 +47,11 @@ UIDrawer::UIDrawer(SampleGrabber* Grabber_):timer(Timer(60))
     fftOps.end=900;
     Pfinder=new PeriodFinder(options,&samples,window,Grabber,fftOps);   
     eventHandler=new EventHandler(window,renderer,options,&samples,Pfinder,Grabber);
-    SRControl=new SampleRateControl(0.01, &samples, Grabber,options);
 }
 UIDrawer::~UIDrawer()
 {
     delete eventHandler;
     delete Pfinder;
-    delete SRControl;
     TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -118,17 +116,17 @@ void UIDrawer::drawUI()
     if(index>0 and index<(int)samples.size()-1)
     {
         txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples.at(index).value)).c_str(),0,h/30,200,200,40,0);
-        long long diff=samples.at(index).time-samples.at((int)samples.size()-1).time;
+        long long diff=((index-((long)samples.size()-1))*options->sampletime)/1000;
         txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
         if(options->paused)
         {
-            diff=samples.at(index).time-samples.at(samplesize-1).time;
+            diff=((index-(samplesize-1))*options->sampletime)/1000;
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
         }
     }
     
     //Draw samplerate
-    txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(SRControl->getSampleRate()) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+    txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(1000000000./(options->sampletime)) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     
     txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
     switch (options->lockmode)

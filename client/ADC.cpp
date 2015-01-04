@@ -22,11 +22,13 @@ void controlThread();
 void senderThread(RingBuffer<sample,1000000> *RB);
 void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB);
 pruIo *io;
-
+int samplelock=0;
 struct sockaddr_in server_samples,server_control;
 struct hostent *he;
 int socket_samples,socket_control,num;
 long sampletime=6290;
+int minTime=6290;
+int maxTime=1000000;
 int main(int argc, char **argv)
 {
     //Setup network
@@ -76,7 +78,8 @@ int main(int argc, char **argv)
 
     if (pruio_config(io, 100000, 1 << 1, sampletime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
-        printf("config failed (%s)\n", io->Errr);}
+        printf("config failed (%s)\n", io->Errr);
+    }
     else
     {   
         //Create Ringbuffer
@@ -105,17 +108,22 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
     timeval tv;
     while(true)
     {
+        while(samplelock) usleep(100);
         lastDRam0=io->DRam[0];
         do
         {
+            if(samplelock)
+            {
+                index=0;
+                wrapped=0
+                break;
+            }
             index++;
             if(index>=100000)
             {
                 index=0; //make sure index don't overflow
             }
             cursample.value=io->Adc->Value[index];
-            gettimeofday(&tv,NULL);
-            cursample.time=((int64_t)tv.tv_sec*1000000)+tv.tv_usec;
             RB->push_back(cursample);
             lastDRam0=io->DRam[0];
         }
@@ -129,7 +137,7 @@ void senderThread(RingBuffer<sample,1000000> *RB)
     sample cursample;
     while(true)
     {
-        while(RB->size())
+        while(!RB->empty())
         {
             cursample=RB->pop_front();
             if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
@@ -146,11 +154,10 @@ void senderThread(RingBuffer<sample,1000000> *RB)
 }
 void controlThread()
 {
-    int speed=5;
-    int8_t cont;
+    controlMessage control
     while(true)
     {
-        if(read(socket_control,&cont,sizeof(cont))==-1)
+        if(read(socket_control,&control,sizeof(controlMessage))==-1)
         {
             perror("recv");
             close(socket_control);
@@ -158,27 +165,41 @@ void controlThread()
             pruio_destroy(io);
             exit(1);
         }
-        if(cont==-1)
+        if(control.changespeed<=-1)
         {
-            if(speed<50)
-            {
-                printf("speedup");
-                speed++;
-                cont=1;
-             }
-             else cont=0;
-             
-        }
-        else if(cont==1) 
-        {
-            if(speed>2)
+            if(sampletime>minTime)
             {
                 printf("speeddown");
-                speed--;
-                cont=1;
-            }
-            else cont=0;
+                sampletime+=5*-control.changespeed;
+                control.changespeed=-1;
+             }
+             else control.changespeed=0;
         }
+        else if(control.changespeed<=-1) 
+        {
+            if(sampletime<maxTime)
+            {
+                printf("speedup");
+                sampletime+=5*-control.changespeed;
+                control.changespeed=1;
+            }
+            else control.changespeed=0;
+            
+        }
+        if(control.changespeed)
+        {
+            samplelock=1;
+            if (pruio_config(io, 100000, 1 << 1, sampletime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
+            {
+                printf("config failed (%s)\n", io->Errr);
+            }
+            else
+            {
+                pruio_rb_start(io);
+            }
+            samplelock=0
+        }
+        control.time=sampletime;
         if (write(socket_control,&cont, 1)== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);

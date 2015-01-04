@@ -95,44 +95,36 @@ void SampleGrabber::run()
         }
     }
 }
-bool SampleGrabber::RequestFastRate()
+void SampleGrabber::ControlReciever()
 {
-    controlMtx->lock();
-    control=1;
-    if ((write(socket_cli_control,&control, sizeof(control))== -1)) {
+    controlMessage control;
+    int pointer=0;
+    while(!stop)
+    {
+        if ( (read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
+        {
+            perror("recv");
+            exit(1);
+        }
+        if(pointer==sizeof(control))
+        {
+            pointer=0;
+            if(control.time) options.sampletime=control.time;
+        }
+    }
+}
+void SampleGrabber::RequestChangedRate(int16_t rate )
+{
+    controlMessage control;
+    control.changespeed=rate;
+    if ((write(socket_cli_control,&control, sizeof(controlMessage))== -1)) {
         printf( "Failure Sending Message\n");
         close(socket_serv_control);
         close(socket_serv_control);
         exit(1);
     }
-    int offset=0;
-    if ( (read(socket_cli_control, &control, sizeof(control) )== -1)) 
-    {
-        perror("recv");
-        exit(1);
-    }
-    controlMtx->unlock();
-    return control;   
-        
 }
-bool SampleGrabber::RequestSlowerRate()
-{
-    controlMtx->lock();
-    control=-1;
-    if ((write(socket_cli_control,&control, sizeof(control))== -1)) {
-        printf( "Failure Sending Message\n");
-        /*close(socket_serv_control);
-        close(socket_serv_control);
-        exit(1);*/
-    }
-    if ( (read(socket_cli_control, &control, 1 )== -1)) 
-    {
-        perror("recv");
-        //exit(1);
-    }
-    controlMtx->unlock();
-    return control;   
-}
+
 SampleGrabber::~SampleGrabber()
 {
     stop=true;
@@ -146,6 +138,10 @@ SampleGrabber::~SampleGrabber()
 void sampleWrapper(SampleGrabber* SGrabber)
 {
     SGrabber->run();
+}
+void controlWrapper(SampleGrabber* SGrabber)
+{
+    SGrabber->ControlReciever();
 }
 
 

@@ -357,6 +357,7 @@ int PeriodFinder::FindBestLockMode(long samplesize,int periode)
 void PeriodFinder::calcPeriodeThread()
 {
     int tick=0;
+    uint64_t lasttime=options->sampletime;
     while(!stop)
     {
         tick++;
@@ -365,23 +366,15 @@ void PeriodFinder::calcPeriodeThread()
         findPeriode();
         //cout << runningAvgBuf.getAvg() << " "  << runningAvgBuf.getRelativeStandDiv() << " " << options->connected << " "<< (int)options->sampleMaxMin << endl;
         if(tick%4!=0) continue;
-        if(options->connected and options->sampleMaxMin!=-1 and getPeriode()>100000)
+        if(options->connected and !options->locked and  getPeriode()>100000 and lasttime!=options->sampletime)
         {
-            if(!SGrabber->RequestSlowerRate()) 
-            {
-                options->sampleMaxMin=-1;
-                options->adjusted=1;
-            }
-            else options->sampleMaxMin=0;
+            lasttime=options->sampletime;
+            SGrabber->RequestChangedRate(-1);
         }
-        else if(options->connected and options->sampleMaxMin!=1 and getPeriode()<500)
+        else if(options->connected and lasttime!=options->sampletime and !options->locked and getPeriode()<500)
         {
-            if(!SGrabber->RequestFastRate())
-            {
-                options->sampleMaxMin=1;
-                options->adjusted=1;
-            }
-            options->sampleMaxMin=0;
+            lasttime=options->sampletime;
+            SGrabber->RequestChangedRate(-1);
         }
         else options->adjusted=0;
     }

@@ -15,7 +15,7 @@
 #include "RingBuffer.h"
 #include "structures.h"
 #include "structures.h"
-#define BACKLOG 100000
+#define BACKLOG 10000
 class SampleGrabber
 {
     private:
@@ -29,7 +29,6 @@ class SampleGrabber
         std::thread t1;
         bool stop=false;
         std::mutex *controlMtx;
-        int8_t control;
   
     public:
         Options options;
@@ -37,8 +36,8 @@ class SampleGrabber
         SampleGrabber(int sPort,int cPort);
         ~SampleGrabber();
         void run();    
-        bool RequestFastRate();
-        bool RequestSlowerRate();
+        void ControlReciever();
+        void RequestChangedRate(int16_t rate );
     
 };
 void sampleWrapper(SampleGrabber* SGrabber);

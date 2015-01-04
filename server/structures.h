@@ -18,11 +18,12 @@ struct Options
     bool connected=0;
     bool adjusted=0;
     int8_t viewMode=0;
+    uint64_t sampletime;
+    bool locked=0;
 };
 struct sample
 {
-    int16_t value;
-    int64_t time; //time in ms
+    int16_t value; //samplevalue
 };
 struct FFTOps
 {
@@ -31,4 +32,9 @@ struct FFTOps
     long size;
     long totalsize;
     std::complex<double> *mem;
+};
+struct controlMessage
+{
+    int16_t changespeed=0;   //should speed be faster or slower?
+    uint64_t time=0;        //time between samples is changed/should be changed to this number of ns
 };
