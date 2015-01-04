@@ -154,7 +154,6 @@ void senderThread(RingBuffer<sample,1000000> *RB)
                 pruio_destroy(io);
                 exit(1);
             }
-        printf("samplesend return %d\n",size);
         }
         t.tick();
     }
