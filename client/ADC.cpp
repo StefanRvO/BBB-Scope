@@ -155,6 +155,14 @@ void senderThread(RingBuffer<sample,1000000> *RB)
 void controlThread()
 {
     controlMessage control;
+    control.time=sampletime;
+    if (write(socket_control,&control, 1)== -1) {
+            printf( "Failure Sending Message\n");
+            close(socket_control);
+            close(socket_samples);
+            pruio_destroy(io);
+            exit(1);
+    }
     while(true)
     {
         if(read(socket_control,&control,sizeof(controlMessage))==-1)
