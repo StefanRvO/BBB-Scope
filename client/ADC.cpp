@@ -115,7 +115,7 @@ void sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             if(samplelock)
             {
                 index=0;
-                wrapped=0
+                wrapped=0;
                 break;
             }
             index++;
@@ -154,7 +154,7 @@ void senderThread(RingBuffer<sample,1000000> *RB)
 }
 void controlThread()
 {
-    controlMessage control
+    controlMessage control;
     while(true)
     {
         if(read(socket_control,&control,sizeof(controlMessage))==-1)
