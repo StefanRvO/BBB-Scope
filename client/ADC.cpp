@@ -167,7 +167,7 @@ void controlThread()
     }
     while(true)
     {
-        if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(control)-pointer )== -1)) 
+        if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer )== -1)) 
         {
             perror("recv");
             close(socket_control);
@@ -176,7 +176,8 @@ void controlThread()
             exit(1);
         }
         pointer+=size;
-        if(pointer!=sizeof(control)) continue;
+        printf("%d\n",pointer)
+        if(pointer!=sizeof(controlMessage)) continue;
         pointer=0;
         if(control.changespeed<=-1)
         {
