@@ -164,13 +164,19 @@ void controlThread()
     control.time=sampletime;
     int pointer=0;
     int size;
-    if ((size=write(socket_control,&control, sizeof(control))== -1)) {
-            printf( "Failure Sending Message\n");
-            close(socket_control);
-            close(socket_samples);
-            pruio_destroy(io);
-            exit(1);
+    int sendpointer=0;
+    while(sendpointer!= sizeof(controlMessage))
+    {
+        if ((size=write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+                printf( "Failure Sending Message\n");
+                close(socket_control);
+                close(socket_samples);
+                pruio_destroy(io);
+                exit(1);
+        }
+        sendpointer+=size;
     }
+    sendpointer=0;
     printf("controlsend return %d\n",size);
     while(true)
     {
@@ -221,13 +227,17 @@ void controlThread()
             printf("%ld\n",sampletime);
         }
         control.time=sampletime;
-        if ((size=write(socket_control,&control, sizeof(controlMessage))== -1)) {
-            printf( "Failure Sending Message\n");
-            close(socket_control);
-            close(socket_samples);
-            pruio_destroy(io);
-            exit(1);
+        while(sendpointer!= sizeof(controlMessage))
+        {
+            if ((size=write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+                    printf( "Failure Sending Message\n");
+                    close(socket_control);
+                    close(socket_samples);
+                    pruio_destroy(io);
+                    exit(1);
+            }
+            sendpointer+=size;
         }
-        printf("controlsend return %d\n",size);
+        sendpointer=0;
     }
 }  
