@@ -103,14 +103,16 @@ void SampleGrabber::ControlReciever()
     int size;
     while(!stop)
     {
-        
-        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(control)-pointer ))== -1) 
+        printf("test1\n");
+        if ( (size=read(socket_cli_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
         {
             perror("recv");
             exit(1);
         }
         pointer+=size;
-        printf("test\n");
+        if(pointer!=sizeof(controlMessage)) continue;
+        pointer=0;
+        printf("test2\n");
         if(pointer==sizeof(control))
         {
             pointer=0;
@@ -120,6 +122,7 @@ void SampleGrabber::ControlReciever()
                 printf("%ld\n",options.sampletime);
             }
         }
+        printf("test3\n");
     }
 }
 void SampleGrabber::RequestChangedRate(int16_t rate )
