@@ -140,12 +140,13 @@ void senderThread(RingBuffer<sample,1000000> *RB)
 {
     Timer t(100);
     sample cursample;
+    int size;
     while(true)
     {
         while(!RB->empty())
         {
             cursample=RB->pop_front();
-            if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
+            if ((size=write(socket_samples,&cursample, sizeof(cursample))== -1)) 
             {
                 printf( "Failure Sending Message\n");
                 close(socket_control);
@@ -153,6 +154,7 @@ void senderThread(RingBuffer<sample,1000000> *RB)
                 pruio_destroy(io);
                 exit(1);
             }
+        printf("samplesend return %d\n",size);
         }
         t.tick();
     }
@@ -163,13 +165,14 @@ void controlThread()
     control.time=sampletime;
     int pointer=0;
     int size;
-    if (write(socket_control,&control, sizeof(control))== -1) {
+    if ((size=write(socket_control,&control, sizeof(control))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
             pruio_destroy(io);
             exit(1);
     }
+    printf("controlsend return %d\n",size);
     while(true)
     {
         if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
@@ -219,12 +222,13 @@ void controlThread()
             printf("%ld\n",sampletime);
         }
         control.time=sampletime;
-        if ((write(socket_control,&control, sizeof(controlMessage))== -1)) {
+        if ((size=write(socket_cli_control,&control, sizeof(controlMessage))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
             pruio_destroy(io);
             exit(1);
         }
+        printf("controlsend return %d\n",size);
     }
 }  
