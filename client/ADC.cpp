@@ -197,10 +197,10 @@ void controlThread()
             {
                 pruio_rb_start(io);
             }
-            samplelock=0
+            samplelock=0;
         }
         control.time=sampletime;
-        if (write(socket_control,&cont, 1)== -1) {
+        if (write(socket_control,&control, 1)== -1) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
