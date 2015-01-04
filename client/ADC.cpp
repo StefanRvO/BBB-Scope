@@ -164,7 +164,7 @@ void controlThread()
     control.time=sampletime;
     int pointer=0;
     int size;
-    if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+    if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
         printf( "Failure Sending Message\n");
         close(socket_control);
         close(socket_samples);
@@ -220,7 +220,7 @@ void controlThread()
             printf("%ld\n",sampletime);
         }
         control.time=sampletime;
-        if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+        if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);
