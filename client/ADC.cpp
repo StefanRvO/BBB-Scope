@@ -185,7 +185,7 @@ void controlThread()
         pointer=0;
         if(control.changespeed<=-1)
         {
-            if(sampletime+5*-control.changespeed>minTime)
+            if(sampletime+5*-control.changespeed<maxTime)
             {
                 printf("speeddown\n");
                 sampletime+=5*-control.changespeed;
@@ -195,7 +195,7 @@ void controlThread()
         }
         else if(control.changespeed<=-1) 
         {
-            if(sampletime+5*-control.changespeed<maxTime)
+            if(sampletime+5*-control.changespeed>minTime)
             {
                 printf("speedup\n");
                 sampletime+=5*-control.changespeed;
