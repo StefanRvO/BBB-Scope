@@ -5,7 +5,6 @@
 #include "../server/structures.h"
 #include "ADCOptions.h"
 #include "ADC.h"
-#include "ADC.h"
 int main(int argc, char **argv)
 {
     //Setup network
