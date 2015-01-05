@@ -42,7 +42,7 @@ void ADC::sampleThread()
             lastDRam0=io->DRam[0];
         }
         while(sampleIndex!=lastDRam0);
-        usleep(options->sampletime/200); //wait at least 5 samples
+        usleep(options->sampleTime/200); //wait at least 5 samples
     }
 }
 void ADC::resetSampler()
@@ -64,5 +64,5 @@ void ADC::resetSampler()
 }
 void SampleThreadWrapper(ADC *Adc)
 {
-    Adc->SampleThread();
+    Adc->sampleThread();
 }
