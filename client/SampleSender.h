@@ -19,7 +19,7 @@ class SampleSender
         hostent *he;
         int socket_samples,socket_control,num;
         bool changeSampleTime(uint64_t time);
-        RingBuffer<sample,1000000> *RB
+        RingBuffer<sample,1000000> *RB;
         ADCOptions *options;
         std::thread t1;
         bool stop=0;
