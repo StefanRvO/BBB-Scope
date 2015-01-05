@@ -1,4 +1,5 @@
 #include "SampleSender.h"
+#include <iostream>
 SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_,int sPORT, int cPORT, hostent *he, ADC *Adc_)
 {
     options=options_;
@@ -87,6 +88,7 @@ void SampleSender::sampleSocketThread()
     sample cursample;
     while(!stop)
     {
+        std::cout << RB->size() << std::endl;
         while(!RB->empty())
         {
             cursample=RB->pop_front();
