@@ -60,7 +60,6 @@ void ADC::resetSampler()
     {
         pruio_rb_start(io);
         sampleIndex=io->DRam[0];
-        usleep(options->sampleTime/200); //wait at least 5 samples
         lastDRam0=io->DRam[0];
         t1=std::thread(SampleThreadWrapper,this);
     }
