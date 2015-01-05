@@ -9,7 +9,7 @@
 int main(int argc, char **argv)
 {
     //Setup network
-    hostnet *he;
+    hostent *he;
     if (argc != 2) {
         fprintf(stderr, "Usage: client hostname\n");
         exit(1);
