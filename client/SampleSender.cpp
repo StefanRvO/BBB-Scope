@@ -53,6 +53,7 @@ bool SampleSender::changeSampleTime(uint64_t time)
 void SampleSender::controlSocketThread()
 {
     controlMessage control;
+    control.time=options->sampleTime;
     if (write(socket_control,(char *)&control, sizeof(controlMessage))== -1) {
         printf( "Failure Sending Message\n");
         stop=true;
