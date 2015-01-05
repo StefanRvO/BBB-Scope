@@ -1,5 +1,9 @@
+#pragma once
 #include <cstdio>
+#ifndef PRUIO_H
+#define PRUIO_H
 #include <pruio.h>
+#endif PRUIO_H
 #include <thread>
 #include "../server/Timer.h"
 #include "../server/RingBuffer.h"
