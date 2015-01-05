@@ -103,7 +103,7 @@ void SampleSender::sampleSocketThread()
             {
                 //adjust speed if network is overloaded
                 options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
-                optios->options->sampleTimeMin=options->sampleTime;
+                options->sampleTimeMin=options->sampleTime;
                 Adc->resetSampler();
                 controlMessage control;
                 control.changespeed=-1;
