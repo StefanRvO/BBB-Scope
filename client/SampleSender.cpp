@@ -1,5 +1,5 @@
 #include "SampleSender.h"
-SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_,int sPORT, int cPORT, hostent *he, ADC *Adc_);
+SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_,int sPORT, int cPORT, hostent *he, ADC *Adc_)
 {
     options=options_;
     RB=RB_;
