@@ -114,6 +114,7 @@ void SampleSender::sampleSocketThread()
                     return;
                 }
             }
+        }
         t.tick();
     }
 }
