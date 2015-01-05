@@ -100,15 +100,12 @@ void controlThread()
     control.time=sampletime;
     int pointer=0;
     int size;
-    int sendpointer=0;
-    if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+    if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
         printf( "Failure Sending Message\n");
         close(socket_control);
         close(socket_samples);
         exit(1);
     }
-    sendpointer=0;
-    printf("controlsend return %d\n",size);
     while(true)
     {
         if ( (size=read(socket_control, ((char*)&control)+pointer, sizeof(controlMessage)-pointer ))== -1) 
@@ -148,7 +145,7 @@ void controlThread()
             printf("%ld\n",sampletime);
         }
         control.time=sampletime;
-        if ((write(socket_control,(char *)&control+sendpointer, sizeof(controlMessage)-sendpointer)== -1)) {
+        if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
             printf( "Failure Sending Message\n");
             close(socket_control);
             close(socket_samples);

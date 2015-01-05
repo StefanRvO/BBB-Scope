@@ -116,32 +116,38 @@ void UIDrawer::drawUI()
     if(index>0 and index<(int)samples.size()-1)
     {
         txtDraw.DrawText(renderer,(string("Current value: ") +std::to_string(samples.at(index).value)).c_str(),0,h/30,200,200,40,0);
-        long long diff=((index-((long)samples.size()-1))*options->sampletime)/1000;
+        long long diff= (((long long)index)-((long long)samples.size())-1)*options->sampletime;
+        diff/=1000;
         txtDraw.DrawText(renderer,(string("Current time: ") +std::to_string(diff) +string(" µs")).c_str(),0,2*h/30,200,200,40,0);
         if(options->paused)
         {
-            diff=((index-(samplesize-1))*options->sampletime)/1000;
+            long long diff= (((long long)index)-((long long)samplesize)-1)*options->sampletime;
+            diff/=1000;
             txtDraw.DrawText(renderer,(string("Current paused time : ") +std::to_string(diff) +string(" µs")).c_str(),0,3*h/30,200,200,40,0);
         }
     }
     
     //Draw samplerate
-    txtDraw.DrawText(renderer,(string("samplerate : ") +std::to_string(1000000000./(options->sampletime)) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
+    txtDraw.DrawText(renderer,(string("Samplerate : ") +std::to_string(1000000000./(options->sampletime)) +string(" Hz")).c_str(),0,4*h/30,200,200,40,0);
     
-    txtDraw.DrawText(renderer,(string("periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
+    txtDraw.DrawText(renderer,(string("Periodelength : ") +std::to_string(Pfinder->getRunningAvgPeriode()) +string(" samples")).c_str(),0,5*h/30,200,200,40,0);
+    txtDraw.DrawText(renderer,(string("PeriodeFrequency : ") +std::to_string(1000000000./(options->sampletime)/Pfinder->getRunningAvgPeriode()) +string(" Hz")).c_str(),0,6*h/30,200,200,40,0);
     switch (options->lockmode)
     {
         case 0:
-            txtDraw.DrawText(renderer,"Lockmode: Auto",0,6*h/30,200,200,40,0);
+            txtDraw.DrawText(renderer,"Lockmode: Auto",0,7*h/30,200,200,40,0);
             break;
         case 1:
-            txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,6*h/30,200,200,40,0);
+            txtDraw.DrawText(renderer,"Lockmode: Smooth minlock",0,7*h/30,200,200,40,0);
             break;
         case 2:
-            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,6*h/30,200,200,40,0);
+            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock min",0,7*h/30,200,200,40,0);
             break;
         case 3:
-            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,6*h/30,200,200,40,0);
+            txtDraw.DrawText(renderer,"Lockmode: Smooth steplock max",0,7*h/30,200,200,40,0);
+            break;
+        case 4:
+            txtDraw.DrawText(renderer,"Lockmode: None",0,7*h/30,200,200,40,0);
             break;
     }
 }
