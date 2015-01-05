@@ -369,12 +369,13 @@ void PeriodFinder::calcPeriodeThread()
         if(options->connected and !options->locked and  getPeriode()>100000 and lasttime!=options->sampletime)
         {
             lasttime=options->sampletime;
-            SGrabber->RequestChangedRate(-1);
+            
+            SGrabber->RequestChangedRate(-(options->sampletime/1000)); //change samplerate .1%
         }
         else if(options->connected and lasttime!=options->sampletime and !options->locked and getPeriode()<500)
         {
             lasttime=options->sampletime;
-            SGrabber->RequestChangedRate(-1);
+            SGrabber->RequestChangedRate(options->sampletime/1000); //change samplerate .1%
         }
         else options->adjusted=0;
     }
