@@ -22,6 +22,6 @@ int main(int argc, char **argv)
     ADCOptions options;
     RingBuffer<sample,1000000> RB;
     ADC Adc(&options, &RB);
-    SampleSender SS(&options, &RB, 3490, 3491, he);
+    SampleSender SS(&options, &RB, 3490, 3491, he, &Adc);
     SS.sampleSocketThread();
 }
