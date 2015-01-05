@@ -3,6 +3,7 @@
 #include <thread>
 #include "../server/Timer.h"
 #include "../server/RingBuffer.h"
+#include "../server/structures.h"
 #include "ADCOptions.h"
 class ADC
 {
@@ -20,5 +21,5 @@ class ADC
         ~ADC();
         void resetSampler();
         void SampleThread();
-}
+};
 void SampleThreadWrapper(ADC *Adc);

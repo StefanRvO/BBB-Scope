@@ -6,7 +6,7 @@ ADC::ADC(ADCOptions *options_, RingBuffer<sample,1000000> *RB_)
     io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! create new driver structure
     pruio_adc_setStep(io, 1, 1, 0, 0, 0); // step 1 for AIN-1
 
-    if (pruio_config(io, 100000, 1 << 1, options->sampletime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
+    if (pruio_config(io, 100000, 1 << 1, options->sampleTime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
         printf("config failed (%s)\n", io->Errr);
     }
@@ -14,6 +14,7 @@ ADC::ADC(ADCOptions *options_, RingBuffer<sample,1000000> *RB_)
     {
         pruio_rb_start(io);
         sampleIndex=io->DRam[0];
+        lastDRam0=io->DRam[0];
         t1=std::thread(SampleThreadWrapper,this);
     }
     
@@ -30,7 +31,6 @@ void ADC::sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
     sample cursample;
     while(!sampleStop and !stop)
     {
-        lastDRam0=io->DRam[0];
         {
             sampleIndex++;
             if(sampleIndex>=100000)
@@ -58,6 +58,7 @@ ADC::resetSampler()
     {
         pruio_rb_start(io);
         sampleIndex=io->DRam[0];
+        lastDRam0=io->DRam[0];
         t1=std::thread(SampleThreadWrapper,this);
     }
 }
