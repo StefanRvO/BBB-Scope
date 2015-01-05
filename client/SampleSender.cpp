@@ -105,8 +105,15 @@ void SampleSender::sampleSocketThread()
                 options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
                 optios->options->sampleTimeMin=options->sampleTime;
                 Adc->resetSampler();
+                controlMessage control;
+                control.changespeed=-1;
+                control.time=options->sampleTime;
+                if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
+                    printf( "Failure Sending Message\n");
+                    stop=true;
+                    return;
+                }
             }
-        }
         t.tick();
     }
 }
