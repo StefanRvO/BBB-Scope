@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <cstdio>
+#include <netdb.h>
 #include "SampleSender.h"
 #include "../server/RingBuffer.h"
 #include "../server/structures.h"
