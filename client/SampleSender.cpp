@@ -1,5 +1,5 @@
 #include "SampleSender.h"
-SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_,int sPORT, int cPORT, ADC *Adc_)
+SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_,int sPORT, int cPORT, hostent *he, ADC *Adc_);
 {
     options=options_;
     RB=RB_;
@@ -30,7 +30,7 @@ SampleSender::SampleSender(ADCOptions *options_, RingBuffer<sample,1000000> *RB_
         perror("connect");
         stop=true;
     }
-    if(!stop) t1=thread(controlSocketThreadWrapper,this);
+    if(!stop) t1=std::thread(controlSocketThreadWrapper,this);
 }
 SampleSender::~SampleSender()
 {
@@ -70,8 +70,8 @@ void SampleSender::controlSocketThread()
         pointer+=size;
         if(pointer!=sizeof(controlMessage)) continue;
         pointer=0;
-        uint64_t newtime=options->sampleTime-control.changeSpeed;
-        control.changespeed=changeSampleTime(newtime)*control.changeSpeed;
+        uint64_t newtime=options->sampleTime-control.changespeed;
+        control.changespeed=changeSampleTime(newtime)*control.changespeed;
         control.time=options->sampleTime;
         
         if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
