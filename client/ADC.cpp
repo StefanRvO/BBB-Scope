@@ -31,6 +31,7 @@ void ADC::sampleThread()
     sample cursample;
     while(!sampleStop and !stop)
     {
+        do
         {
             sampleIndex++;
             if(sampleIndex>=100000)

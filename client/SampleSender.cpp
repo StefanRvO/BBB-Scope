@@ -88,7 +88,6 @@ void SampleSender::sampleSocketThread()
     sample cursample;
     while(!stop)
     {
-        std::cout << RB->size() << std::endl;
         while(!RB->empty())
         {
             cursample=RB->pop_front();
