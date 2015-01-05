@@ -156,6 +156,10 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
             if(options->viewMode>=2) options->viewMode=0;
         }
     }
+    else if(event.key.keysym.scancode==SDL_SCANCODE_S)
+    {
+        options->autoSampleRate^=1;
+    }
 }
 void EventHandler::handleKeyUpEvent(SDL_Event &event)
 {

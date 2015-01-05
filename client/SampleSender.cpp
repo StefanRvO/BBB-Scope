@@ -86,6 +86,7 @@ void SampleSender::sampleSocketThread()
 {
     Timer t(100);
     sample cursample;
+    uint32_t sendcounter;
     while(!stop)
     {
         while(!RB->empty())
@@ -96,6 +97,14 @@ void SampleSender::sampleSocketThread()
                 printf("Failure Sending Message\n");
                 stop=true;
                 return;
+            }
+            sendcounter++;
+            if(sendcounter%1000==0 and RB->full())
+            {
+                //adjust speed if network is overloaded
+                options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
+                optios->options->sampleTimeMin=options->sampleTime;
+                Adc->resetSampler();
             }
         }
         t.tick();

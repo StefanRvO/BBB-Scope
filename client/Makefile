@@ -4,7 +4,7 @@ CFLAGS= -c -std=c++11 -Ofast -g  #Compiler Flags
 LDFLAGS=-lpthread -lpruio#Linker options
 SOURCES= ADC.cpp SampleSender.cpp client.cpp   #cpp files
 OBJECTS=$(SOURCES:.cpp=.o)  #Object files
-EXECUTEABLE=ADC #Output name
+EXECUTEABLE=client #Output name
 
 all: $(SOURCES) $(EXECUTEABLE)
 	

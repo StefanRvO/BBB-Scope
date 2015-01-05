@@ -150,6 +150,8 @@ void UIDrawer::drawUI()
             txtDraw.DrawText(renderer,"Lockmode: None",0,7*h/30,200,200,40,0);
             break;
     }
+    
+    txtDraw.DrawText(renderer,(string("Auto SampleRate Adjustment: ")+std::to_string(options->autoSampleRate)).c_str(),0,8*h/30,200,200,40,0);
 }
 
 void UIDrawer::drawSamples()

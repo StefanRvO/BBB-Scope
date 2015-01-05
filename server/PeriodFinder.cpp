@@ -365,7 +365,7 @@ void PeriodFinder::calcPeriodeThread()
         renewPlans();
         findPeriode();
         //cout << runningAvgBuf.getAvg() << " "  << runningAvgBuf.getRelativeStandDiv() << " " << options->connected << " "<< (int)options->sampleMaxMin << endl;
-        if(tick%4!=0) continue;
+        if(tick%4!=0 or !options->autoSampleRate) continue;
         if(options->connected and !options->locked and  getPeriode()>100000 and lasttime!=options->sampletime)
         {
             lasttime=options->sampletime;
