@@ -16,6 +16,7 @@ class ADC
         bool sampleStop=false;
         std::thread t1;
         int sampleIndex=0;
+        int lastDram0;
     public:
         ADC(ADCOptions *options_, RingBuffer<sample,1000000> *RB_);
         ~ADC();

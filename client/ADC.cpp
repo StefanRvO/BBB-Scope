@@ -26,7 +26,7 @@ ADC::~ADC()
   pruio_destroy(io);
 }
 
-void ADC::sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
+void ADC::sampleThread()
 {   //Grabs samples from PRU ringbuffer and puts it into global ringbuffer
     sample cursample;
     while(!sampleStop and !stop)
@@ -42,14 +42,14 @@ void ADC::sampleThread(pruIo *io,RingBuffer<sample,1000000> *RB)
             lastDRam0=io->DRam[0];
         }
         while(sampleIndex!=lastDRam0);
-        usleep(sampletime/200); //wait at least 5 samples
+        usleep(options->Sampletime/200); //wait at least 5 samples
     }
 }
 ADC::resetSampler()
 {
     sampleStop=true;
     t1.join();
-    if (pruio_config(io, 100000, 1 << 1, options->sampletime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
+    if (pruio_config(io, 100000, 1 << 1, options->sampleTime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
         printf("config failed (%s)\n", io->Errr);
         
