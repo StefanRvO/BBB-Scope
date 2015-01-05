@@ -50,6 +50,7 @@ void ADC::resetSampler()
 {
     sampleStop=true;
     t1.join();
+    sampleStop=false;
     if (pruio_config(io, 100000, 1 << 1, options->sampleTime, 0)) //step 1, 6290ns/sample -> 158,98 KHz
     {
         printf("config failed (%s)\n", io->Errr);
