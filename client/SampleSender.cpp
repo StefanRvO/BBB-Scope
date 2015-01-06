@@ -97,7 +97,7 @@ void SampleSender::sampleSocketThread()
             for(int i=0;i<500;i++) cursamples[i]=RB->pop_front();
             while(totalsize<500)
             {
-                if ((size=write(socket_samples,&cursamples[totalsize], sizeof(cursamples))== -1)= 
+                if ((size=write(socket_samples,&cursamples[totalsize], sizeof(cursamples))== -1)) 
                 {
                     printf("Failure Sending Message\n");
                     stop=true;
