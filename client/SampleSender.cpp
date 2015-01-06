@@ -95,17 +95,17 @@ void SampleSender::sampleSocketThread()
         while(RB->size() >= 502)
         {
             for(int i=0;i<500;i++) cursamples[i]=RB->pop_front();
-            while(totalsize<500)
-            {
-                if ((size=write(socket_samples,&cursamples[totalsize], sizeof(cursamples)-totalsize)== -1) 
+            //while(totalsize<500)
+            //{
+                if (write(socket_samples,&cursamples[totalsize], sizeof(cursamples)-totalsize)== -1)
                 {
                     printf("Failure Sending Message\n");
                     stop=true;
                     return;
                 }
-                totalsize+=size;
-            }
-            totalsize=0;
+            //    totalsize+=size;
+            //}
+            //totalsize=0;
             sendCounter++;
             if(RB->full() and sendCounter>200)
             {   //adjust speed if network is overloaded
