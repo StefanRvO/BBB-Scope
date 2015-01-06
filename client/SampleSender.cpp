@@ -96,7 +96,7 @@ void SampleSender::sampleSocketThread()
         while(curSamplesindex<1000 and !stop)
         {
             while(RB->empty()) t.tick();
-            cursamples[curSamplesindex++]=RB->pop_front();
+            cursamples[curSamplesindex++].value=RB->pop_front();
         }
         curSamplesindex=0;
         sendPointer=0;
@@ -109,8 +109,8 @@ void SampleSender::sampleSocketThread()
                 return;
             }
             sendPointer+=size;
-            sendCounter++;
         }
+        sendCounter++;
         if(RB->full() and sendCounter>10)
         {   //adjust speed if network is overloaded
             sendCounter=9;
