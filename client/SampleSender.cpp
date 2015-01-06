@@ -85,9 +85,9 @@ void SampleSender::controlSocketThread()
 }
 void SampleSender::sampleSocketThread()
 {
-    Timer t(100);
+    Timer t(1000);
     sample cursample;
-    uint32_t sendcounter;
+    uint32_t sendCounter=0;
     while(!stop)
     {
         while(!RB->empty())
@@ -99,10 +99,10 @@ void SampleSender::sampleSocketThread()
                 stop=true;
                 return;
             }
-            sendcounter++;
-            if(sendcounter%1000==0 and RB->full())
-            {
-                //adjust speed if network is overloaded
+            sendCounter++;
+            if(RB->full() and sendCounter>100000)
+            {   //adjust speed if network is overloaded
+                sendcounter=99000;
                 options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
                 options->sampleTimeMin=options->sampleTime;
                 Adc->resetSampler();
