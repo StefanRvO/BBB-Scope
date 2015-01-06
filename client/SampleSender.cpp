@@ -86,14 +86,15 @@ void SampleSender::controlSocketThread()
 void SampleSender::sampleSocketThread()
 {
     Timer t(1000);
-    sample cursample;
+    sample cursamples[2];
     uint32_t sendCounter=0;
     while(!stop)
     {
-        while(!RB->empty())
+        while(RB->size() >= 3)
         {
-            cursample=RB->pop_front();
-            if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
+            cursamples[0]=RB->pop_front();
+            cursamples[1]=RB->pop_front();
+            if (write(socket_samples,&cursamples, sizeof(cursamples))== -1) 
             {
                 printf("Failure Sending Message\n");
                 stop=true;
@@ -102,7 +103,7 @@ void SampleSender::sampleSocketThread()
             sendCounter++;
             if(RB->full() and sendCounter>100000)
             {   //adjust speed if network is overloaded
-                sendcounter=99000;
+                sendCounter=99000;
                 options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
                 options->sampleTimeMin=options->sampleTime;
                 Adc->resetSampler();
