@@ -86,48 +86,37 @@ void SampleSender::controlSocketThread()
 void SampleSender::sampleSocketThread()
 {
     Timer t(1000);
+    sample cursample;
     uint32_t sendCounter=0;
-    sample cursamples[1000];
-    int curSamplesindex=0;
-    int size=0;
-    int sendPointer=0;
     while(!stop)
     {
-        while(curSamplesindex<1000 and !stop)
+        while(!RB->empty())
         {
-            while(RB->empty()) t.tick();
-            cursamples[curSamplesindex]=RB->pop_front();
-            curSamplesindex++;
-        }
-        curSamplesindex=0;
-        sendPointer=0;
-        while(sendPointer!=sizeof(cursamples) and !stop)
-        {
-            if ((size=write(socket_samples,((char *)&cursamples)+sendPointer, sizeof(cursamples)-sendPointer)== -1))
+            cursample=RB->pop_front();
+            if (write(socket_samples,&cursample, sizeof(cursample))== -1) 
             {
                 printf("Failure Sending Message\n");
                 stop=true;
                 return;
             }
-            sendPointer+=size;
-        }
-        sendCounter++;
-        if(RB->full() and sendCounter>10)
-        {   //adjust speed if network is overloaded
-            sendCounter=9;
-            options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
-            options->sampleTimeMin=options->sampleTime;
-            Adc->resetSampler();
-            controlMessage control;
-            control.changespeed=-1;
-            control.time=options->sampleTime;
-            if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) 
-            {
-                printf( "Failure Sending Message\n");
-                stop=true;
-                return;
+            sendCounter++;
+            if(RB->full() and sendCounter>100000)
+            {   //adjust speed if network is overloaded
+                sendcounter=99000;
+                options->sampleTime+=options->sampleTime/1000*3; //go down 0.3%
+                options->sampleTimeMin=options->sampleTime;
+                Adc->resetSampler();
+                controlMessage control;
+                control.changespeed=-1;
+                control.time=options->sampleTime;
+                if ((write(socket_control,(char *)&control, sizeof(controlMessage))== -1)) {
+                    printf( "Failure Sending Message\n");
+                    stop=true;
+                    return;
+                }
             }
         }
+        t.tick();
     }
 }
 void controlSocketThreadWrapper(SampleSender *SS)
