@@ -95,8 +95,8 @@ void SampleSender::sampleSocketThread()
     {
         while(curSamplesindex<1000 and !stop)
         {
-            cursamples[curSamplesindex++]=RB->pop_front();
             while(RB->empty()) t.tick();
+            cursamples[curSamplesindex++]=RB->pop_front();
         }
         curSamplesindex=0;
         sendPointer=0;
