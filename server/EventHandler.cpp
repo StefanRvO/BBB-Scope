@@ -130,7 +130,7 @@ void EventHandler::handleKeyDownEvent(SDL_Event &event)
     }
     else if(event.key.keysym.scancode==SDL_SCANCODE_A)
     {
-        options->lockmode=0; //set lockmode to auto
+        if(event.key.keysym.mod==KMOD_LCTRL) options->lockmode=0; //set lockmode to auto
         //calculate zoomlevel to show 5 periodes on screen
         int w,h;
         SDL_GetWindowSize(window,&w,&h);
